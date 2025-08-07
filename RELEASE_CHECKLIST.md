@@ -1,4 +1,4 @@
-# Release Checklist - Version 1.0
+# Release Checklist - Version 1.0.0
 
 ## Pre-Release Tasks
 
