@@ -5,7 +5,7 @@
 
 if [ $# -eq 0 ]; then
     echo "Usage: ./version-update.sh <new-version>"
-    echo "Example: ./version-update.sh 1.1.0"
+    echo "Example: ./version-update.sh 1.0.0"
     exit 1
 fi
 

@@ -4,7 +4,7 @@ REM Usage: version-update.bat <new-version>
 
 if "%1"=="" (
     echo Usage: version-update.bat ^<new-version^>
-    echo Example: version-update.bat 1.1.0
+    echo Example: version-update.bat 1.0.0
     exit /b 1
 )
 

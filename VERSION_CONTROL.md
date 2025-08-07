@@ -6,12 +6,12 @@
 We follow [Semantic Versioning](https://semver.org/) format: `MAJOR.MINOR.PATCH`
 
 - **MAJOR** (1.x.x): Breaking changes, major new features
-- **MINOR** (1.1.x): New features, backward compatible
-- **PATCH** (1.1.1): Bug fixes, backward compatible
+- **MINOR** (1.0.x): New features, backward compatible
+- **PATCH** (1.0.1): Bug fixes, backward compatible
 
-### Current Version: 1.1.0
-- **Previous:** 1.0.0
-- **Next Planned:** 1.2.0 (feature release)
+### Current Version: 1.0.0
+- **Previous:** None (Initial Release)
+- **Next Planned:** 1.1.0 (feature release)
 
 ## Git Workflow
 
@@ -31,7 +31,7 @@ git checkout main
 git pull origin main
 
 # Create release branch
-git checkout -b release/v1.1
+git checkout -b release/v1.0.0
 
 # Make version updates
 # - Update version in woo-fashnai-preview.php
@@ -40,7 +40,7 @@ git checkout -b release/v1.1
 
 # Commit changes
 git add .
-git commit -m "Prepare for v1.1 release - Fix GPL headers display issue"
+git commit -m "Prepare for v1.0.0 release - Initial release"
 ```
 
 #### 2. Testing & Validation
@@ -53,10 +53,10 @@ git commit -m "Prepare for v1.1 release - Fix GPL headers display issue"
 #### 3. Create Release Tag
 ```bash
 # Create annotated tag
-git tag -a v1.1.0 -m "Release version 1.1.0 - Bug fix release"
+git tag -a v1.0.0 -m "Release version 1.0.0 - Initial release"
 
 # Push tag to remote
-git push origin v1.1.0
+git push origin v1.0.0
 ```
 
 #### 4. Merge to Main
@@ -65,31 +65,31 @@ git push origin v1.1.0
 git checkout main
 
 # Merge release branch
-git merge release/v1.1
+git merge release/v1.0.0
 
 # Push to main
 git push origin main
 
 # Delete release branch (optional)
-git branch -d release/v1.1
-git push origin --delete release/v1.1
+git branch -d release/v1.0.0
+git push origin --delete release/v1.0.0
 ```
 
 #### 5. Create GitHub Release
 1. Go to GitHub repository
 2. Click "Releases" → "Create a new release"
-3. Select the `v1.1.0` tag
-4. Add release title: "Try-On Tool v1.1.0 - Bug Fix Release"
+3. Select the `v1.0.0` tag
+4. Add release title: "Try-On Tool v1.0.0 - Initial Release"
 5. Add release notes from CHANGELOG.md
-6. Upload the zip file: `try-on_tool_plugin_v1.1.0.zip`
+6. Upload the zip file: `try-on_tool_plugin_v1.0.0.zip`
 
 ## Version Update Checklist
 
 ### Files to Update for Each Release
 
 #### 1. Main Plugin File (`woo-fashnai-preview.php`)
-- [ ] Update version in plugin header: `Version: 1.1.0`
-- [ ] Update constant: `define('WOO_FASHNAI_PREVIEW_VERSION', '1.1.0');`
+- [ ] Update version in plugin header: `Version: 1.0.0`
+- [ ] Update constant: `define('WOO_FASHNAI_PREVIEW_VERSION', '1.0.0');`
 - [ ] Update modification date comment
 
 #### 2. Documentation Files
@@ -105,17 +105,17 @@ git push origin --delete release/v1.1
 ## Release Types
 
 ### Bug Fix Release (PATCH)
-- **Example:** 1.1.0 → 1.1.1
+- **Example:** 1.0.0 → 1.0.1
 - **Changes:** Bug fixes, security patches
 - **Process:** Quick release cycle
 
 ### Feature Release (MINOR)
-- **Example:** 1.1.0 → 1.2.0
+- **Example:** 1.0.0 → 1.1.0
 - **Changes:** New features, improvements
 - **Process:** Full testing cycle
 
 ### Major Release (MAJOR)
-- **Example:** 1.1.0 → 2.0.0
+- **Example:** 1.0.0 → 2.0.0
 - **Changes:** Breaking changes, major rewrites
 - **Process:** Extended testing, migration guide
 
@@ -139,13 +139,13 @@ git push origin main
 ### Tagging
 ```bash
 # Create annotated tag
-git tag -a v1.1.0 -m "Release version 1.1.0"
+git tag -a v1.0.0 -m "Release version 1.0.0"
 
 # List tags
 git tag -l
 
 # Push specific tag
-git push origin v1.1.0
+git push origin v1.0.0
 
 # Push all tags
 git push origin --tags
@@ -170,12 +170,11 @@ git push origin --delete feature/new-feature
 
 | Version | Date | Type | Description |
 |---------|------|------|-------------|
-| 1.1.0 | 2025-08-07 | Bug Fix | Fix GPL headers display, template syntax |
-| 1.0.0 | 2025-08-01 | Initial | Initial release |
+| 1.0.0 | 2025-08-07 | Initial | Initial release |
 
 ## Next Release Planning
 
-### Version 1.2.0 (Planned)
+### Version 1.1.0 (Planned)
 - **Target Date:** TBD
 - **Type:** Feature Release
 - **Planned Features:**
@@ -183,9 +182,9 @@ git push origin --delete feature/new-feature
   - Additional customization options
   - Performance improvements
 
-### Version 1.1.1 (Hotfix - if needed)
+### Version 1.0.1 (Hotfix - if needed)
 - **Type:** Bug Fix
-- **Trigger:** Critical issues discovered in 1.1.0
+- **Trigger:** Critical issues discovered in 1.0.0
 
 ## Best Practices
 
@@ -203,21 +202,21 @@ For critical bugs in production:
 ```bash
 # Create hotfix branch from main
 git checkout main
-git checkout -b hotfix/v1.1.1
+git checkout -b hotfix/v1.0.1
 
 # Make minimal fix
-# Update version to 1.1.1
+# Update version to 1.0.1
 # Update CHANGELOG.md
 
 # Commit and tag
 git add .
 git commit -m "Hotfix: Critical bug fix"
-git tag -a v1.1.1 -m "Hotfix release v1.1.1"
+git tag -a v1.0.1 -m "Hotfix release v1.0.1"
 
 # Push and merge
-git push origin hotfix/v1.1.1
-git push origin v1.1.1
+git push origin hotfix/v1.0.1
+git push origin v1.0.1
 git checkout main
-git merge hotfix/v1.1.1
+git merge hotfix/v1.0.1
 git push origin main
 ``` 

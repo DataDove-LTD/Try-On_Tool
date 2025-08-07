@@ -1,9 +1,9 @@
-# Git Release Workflow - Try-On Tool v1.1
+# Git Release Workflow - Try-On Tool v1.0.0
 
 ## Current Status
-- **Current Version:** 1.1.0
-- **Previous Version:** 1.0.0
-- **Release Type:** Bug Fix Release
+- **Current Version:** 1.0.0
+- **Previous Version:** None (Initial Release)
+- **Release Type:** Initial Release
 - **Branch:** master (needs to be renamed to main)
 
 ## Step-by-Step Release Process
@@ -17,7 +17,7 @@ git status
 git add .
 
 # Commit current changes
-git commit -m "Fix GPL headers display and template syntax issues for v1.1"
+git commit -m "Prepare initial release v1.0.0"
 ```
 
 ### Step 2: Rename Master to Main (if needed)
@@ -35,7 +35,7 @@ git push origin --delete master
 ### Step 3: Create Release Branch
 ```bash
 # Create release branch
-git checkout -b release/v1.1
+git checkout -b release/v1.0.0
 
 # Verify you're on the release branch
 git branch
@@ -51,15 +51,15 @@ git branch
 ### Step 5: Create Release Tag
 ```bash
 # Create annotated tag
-git tag -a v1.1.0 -m "Release version 1.1.0 - Bug fix release
+git tag -a v1.0.0 -m "Release version 1.0.0 - Initial release
 
-- Fixed GPL license headers displaying in admin interface
-- Fixed template file PHP syntax issues
-- Improved template file structure and compatibility
-- Updated version numbering system"
+- Initial release of Try-On Tool plugin
+- WooCommerce integration for virtual try-on functionality
+- Admin settings page with license validation
+- Frontend try-on button and modal interface"
 
 # Push tag to remote
-git push origin v1.1.0
+git push origin v1.0.0
 ```
 
 ### Step 6: Merge to Main
@@ -68,7 +68,7 @@ git push origin v1.1.0
 git checkout main
 
 # Merge release branch
-git merge release/v1.1
+git merge release/v1.0.0
 
 # Push to main
 git push origin main
@@ -77,28 +77,28 @@ git push origin main
 ### Step 7: Clean Up
 ```bash
 # Delete release branch locally
-git branch -d release/v1.1
+git branch -d release/v1.0.0
 
 # Delete release branch on remote
-git push origin --delete release/v1.1
+git push origin --delete release/v1.0.0
 ```
 
 ### Step 8: Create GitHub Release
 
 1. **Go to GitHub Repository**
-   - Navigate to: https://github.com/sulemanaslam1101/Try-OnTool
+   - Navigate to: https://github.com/DataDove-LTD/Try-On_Tool.git
 
 2. **Create New Release**
    - Click "Releases" in the right sidebar
    - Click "Create a new release"
 
 3. **Configure Release**
-   - **Tag version:** `v1.1.0`
-   - **Release title:** `Try-On Tool v1.1.0 - Bug Fix Release`
+   - **Tag version:** `v1.0.0`
+- **Release title:** `Try-On Tool v1.0.0 - Initial Release`
    - **Description:** Copy from CHANGELOG.md
 
 4. **Upload Files**
-   - Create zip file: `try-on_tool_plugin_v1.1.0.zip`
+   - Create zip file: `try-on_tool_plugin_v1.0.0.zip`
    - Upload to GitHub release
 
 5. **Publish Release**
@@ -107,28 +107,23 @@ git push origin --delete release/v1.1
 ## Release Notes for GitHub
 
 ```markdown
-# Try-On Tool v1.1.0 - Bug Fix Release
+# Try-On Tool v1.0.0 - Initial Release
 
 ## What's New
-This release fixes several critical issues with the admin interface and template rendering.
+This is the initial release of the Try-On Tool plugin for WooCommerce.
 
 ## Changes
 
-### Fixed
-- Fixed GPL license headers displaying in admin interface
-- Fixed template file PHP syntax issues in admin settings page
-- Fixed template file PHP syntax issues in frontend button template
-- Fixed template file PHP syntax issues in frontend modal template
-
-### Changed
-- Updated version number from 1.0 to 1.1
-- Improved template file structure for better compatibility
-- Updated modification date to 2025-08-07
-
-### Technical
-- Fixed PHP syntax in `templates/admin/settings-page.php`
-- Fixed PHP syntax in `templates/frontend/modal-template.php`
-- Fixed PHP syntax in `templates/frontend/button-template.php`
+### Added
+- Initial release of Try-On Tool plugin
+- WooCommerce integration for virtual try-on functionality
+- Admin settings page with license validation
+- Frontend try-on button and modal interface
+- Wasabi S3 integration for image storage
+- GDPR-compliant image handling and user consent
+- Credit-based usage system
+- User role and permission controls
+- Automatic image cleanup for inactive users
 
 ## Installation
 1. Download the zip file
@@ -142,7 +137,7 @@ This release fixes several critical issues with the admin interface and template
 - PHP 7.4+
 
 ## Breaking Changes
-None - this is a backward-compatible bug fix release.
+None - this is the initial release.
 ```
 
 ## Verification Commands
@@ -166,14 +161,14 @@ git log --oneline -10
 ### If tag already exists
 ```bash
 # Delete local tag
-git tag -d v1.1.0
+git tag -d v1.0.0
 
 # Delete remote tag
-git push origin --delete v1.1.0
+git push origin --delete v1.0.0
 
 # Recreate tag
-git tag -a v1.1.0 -m "Release version 1.1.0"
-git push origin v1.1.0
+git tag -a v1.0.0 -m "Release version 1.0.0"
+git push origin v1.0.0
 ```
 
 ### If merge conflicts occur
@@ -185,12 +180,12 @@ git merge --abort
 git reset --hard HEAD
 
 # Try merge again
-git merge release/v1.1
+git merge release/v1.0.0
 ```
 
 ## Next Release Planning
 
-### Version 1.2.0 (Feature Release)
+### Version 1.1.0 (Feature Release)
 - **Target Date:** TBD
 - **Type:** Feature Release
 - **Planned Features:**
@@ -198,6 +193,6 @@ git merge release/v1.1
   - Additional customization options
   - Performance improvements
 
-### Version 1.1.1 (Hotfix - if needed)
+### Version 1.0.1 (Hotfix - if needed)
 - **Type:** Bug Fix
-- **Trigger:** Critical issues discovered in 1.1.0 
+- **Trigger:** Critical issues discovered in 1.0.0 

@@ -26,7 +26,7 @@ This checklist must be completed for every public release (stable or beta) of th
 
 ## 📁 Source Code Access
 
-- [ ] GitHub repository is publicly accessible at: `https://github.com/sulemanaslam1101/Try-OnTool`
+- [ ] GitHub repository is publicly accessible at: `https://github.com/DataDove-LTD/Try-On_Tool.git`
 - [ ] Repository contains complete source code for this release
 - [ ] Release tags are properly created and documented
 - [ ] `WRITTEN_OFFER.txt` points to GitHub repository for source code access

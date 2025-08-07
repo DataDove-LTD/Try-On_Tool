@@ -14,6 +14,13 @@
 
 ---
 
+## 📋 Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) (SemVer) for version numbering:
+- **MAJOR** version for incompatible API changes
+- **MINOR** version for backwards-compatible functionality additions
+- **PATCH** version for backwards-compatible bug fixes
+
 ## ⚖️ License
 
 This plugin is licensed under the **GNU General Public License v2 only (GPL-2.0-only)**.  
