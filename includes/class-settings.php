@@ -30,12 +30,23 @@ class WooFashnaiPreview_Settings {
     public function __construct() {
         // Register settings
         add_action('admin_init', array($this, 'register_settings'));
+        
+        // Set default consent value only once when plugin is first activated
+        add_action('init', array($this, 'set_consent_default_once'));
         // Add settings page
         add_action('admin_menu', array($this, 'add_settings_page'));
         // Register AJAX handlers for license validation
         add_action('wp_ajax_woo_fashnai_validate_license', array($this, 'ajax_validate_license_key'));
+        // FREE PLAN TOPUP - AJAX handler for marking free plan as used
+        add_action('wp_ajax_woo_fashnai_mark_free_plan_used', array($this, 'ajax_mark_free_plan_used'));
+        // FREE PLAN TOPUP - AJAX handler for resetting free plan status
+        add_action('wp_ajax_woo_fashnai_reset_free_plan', array($this, 'ajax_reset_free_plan'));
         // Consent records fetch (admin)
         add_action('wp_ajax_woo_fashnai_get_consents', array($this, 'ajax_get_consents'));
+        
+
+        
+
     }
 
     /**
@@ -118,6 +129,17 @@ class WooFashnaiPreview_Settings {
         register_setting(
             'woo_fashnai_preview_options',
             'woo_fashnai_require_extra_consents',
+            array(
+                'type' => 'boolean',
+                'sanitize_callback' => array($this, 'sanitize_consent_setting'),
+                'default' => 1,
+            )
+        );
+
+        // FREE PLAN TOPUP - Track if free plan has been used
+        register_setting(
+            'woo_fashnai_preview_options',
+            'woo_fashnai_free_plan_used',
             array(
                 'type' => 'boolean',
                 'sanitize_callback' => function($val) { return $val ? 1 : 0; },
@@ -217,7 +239,49 @@ class WooFashnaiPreview_Settings {
         }
         return array();
     }
+    
+    /**
+     * Sanitize consent setting
+     */
+    public function sanitize_consent_setting( $input ) {
+        // If the input is explicitly set to 0 or false, return 0
+        if ( $input === 0 || $input === '0' || $input === false || $input === 'false' ) {
+            return 0;
+        }
+        
+        // If the input is truthy, return 1
+        if ( $input ) {
+            return 1;
+        }
+        
+        // Default to 0 for any other case
+        return 0;
+    }
 
+    /**
+     * Set default consent value only once when plugin is first activated
+     */
+    public function set_consent_default_once() {
+        // Check if we've already set the default value
+        if (get_option('woo_fashnai_consent_default_initialized') === true) {
+            return; // Already initialized, don't run again
+        }
+        
+        // Get the current value of the consent option
+        $current_value = get_option('woo_fashnai_require_extra_consents');
+        
+        // Only set default if the option doesn't exist at all
+        if ($current_value === false) {
+            update_option('woo_fashnai_require_extra_consents', 1);
+            error_log('Try-On Tool: Consent setting initialized to checked by default.');
+        }
+        
+        // Mark that we've initialized the default value
+        update_option('woo_fashnai_consent_default_initialized', true);
+    }
+    
+
+    
     /**
      * AJAX: Return consent records for admin table
      */
@@ -233,5 +297,39 @@ class WooFashnaiPreview_Settings {
         // Return as numerically-indexed array for easier JS loop
         $out = array_values( $consents );
         wp_send_json_success( $out );
+    }
+
+    /**
+     * FREE PLAN TOPUP - AJAX: Mark free plan as used
+     */
+    public function ajax_mark_free_plan_used() {
+        check_ajax_referer( 'fashnai_mark_free_plan_used', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'woo-fashnai-preview' ) ), 403 );
+        }
+
+        // FREE PLAN TOPUP - Mark free plan as used
+        update_option( 'woo_fashnai_free_plan_used', true );
+
+        wp_send_json_success( array( 
+            'message' => __( 'Free plan marked as used.', 'woo-fashnai-preview' ),
+            'redirect_url' => 'https://tryontool.com/checkout/?add-to-cart=' . (defined('FASHNAI_PLAN_FREE_PRODUCT_ID') ? FASHNAI_PLAN_FREE_PRODUCT_ID : 5961)
+        ) );
+    }
+
+    /**
+     * FREE PLAN TOPUP - AJAX: Reset free plan status
+     */
+    public function ajax_reset_free_plan() {
+        check_ajax_referer( 'fashnai_reset_free_plan', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'woo-fashnai-preview' ) ), 403 );
+        }
+
+        // FREE PLAN TOPUP - Reset free plan status
+        delete_option( 'woo_fashnai_free_plan_used' );
+        wp_send_json_success( array( 'message' => __( 'Free plan status reset.', 'woo-fashnai-preview' ) ) );
     }
 }

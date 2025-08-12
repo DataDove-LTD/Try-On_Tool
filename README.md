@@ -11,6 +11,7 @@
 - Admin settings via WordPress dashboard
 - GDPR-conscious image handling
 - Supports tops, bottoms, full-body, and ethnicwear
+- 3-credit free trial for new users
 
 ---
 

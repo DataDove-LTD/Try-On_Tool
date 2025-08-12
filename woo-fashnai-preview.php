@@ -23,7 +23,7 @@
 /**
  * Plugin Name: Try-On Tool
  * Description: Connect WooCommerce with Try-On Tool for AI-generated virtual try-on previews
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: DataDove
  * Text Domain: woo-fashnai-preview
  * Domain Path: /languages
@@ -31,8 +31,9 @@
  * Requires PHP: 7.4
  * WC requires at least: 5.0
  * WC tested up to: 8.0
+ * HPOS Compatible: true
  */
-// Modified by DataDove LTD on 2025-08-07
+// Modified by DataDove LTD on 12/8/2025
 
 // If this file is called directly, abort.
 if (!defined('WPINC')) {
@@ -40,7 +41,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('WOO_FASHNAI_PREVIEW_VERSION', '1.0.0');
+define('WOO_FASHNAI_PREVIEW_VERSION', '1.1.0');
 define('WOO_FASHNAI_PREVIEW_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WOO_FASHNAI_PREVIEW_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('FASHNAI_RELAY_ENDPOINT', 'https://tryontool.com/wp-json/fashnai/v1/preview');
@@ -145,6 +146,8 @@ function woo_fashnai_preview_activate() {
     add_option('woo_fashnai_allowed_roles', array());
     add_option('woo_fashnai_allowed_user_ids', '');
     add_option('woo_fashnai_required_user_tag', '');
+    add_option('woo_fashnai_require_extra_consents', 1); // Default to checked
+    add_option('woo_fashnai_consent_default_set', true); // Mark that default consent has been set
 }
 
 add_action('rest_api_init', function () {

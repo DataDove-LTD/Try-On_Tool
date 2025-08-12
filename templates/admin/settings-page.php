@@ -88,7 +88,7 @@
                        <p style="margin-bottom: 10px;">
                            <?php _e('Need to purchase a plan?', 'woo-fashnai-preview'); ?>
                        </p>
-                       <a href="https://tryontool.com/plans" target="_blank" class="button button-primary" style="text-decoration: none;">
+                                               <a href="https://tryontool.com/plans" target="_blank" class="button button-primary" style="text-decoration: none;">
                            <?php _e('Visit Try-On Tool Website', 'woo-fashnai-preview'); ?>
                        </a>
                        <p class="description">
@@ -96,6 +96,109 @@
                        </p>
                    </td>
                </tr>
+               <!-- FREE PLAN TOPUP SECTION - appears when license key is empty -->
+               <?php 
+               $license_key = get_option('woo_fashnai_license_key');
+               if (empty($license_key)): 
+                   
+                   // FREE PLAN TOPUP - Check if FREE plan has been used by this account
+                   global $wpdb;
+                   $table_name = $wpdb->prefix . 'user_plans';
+                   $free_plan_used = false;
+                   
+                   if (defined('FASHNAI_PLAN_FREE_PRODUCT_ID')) {
+                       $current_user_id = get_current_user_id();
+                       
+                       // FREE PLAN TOPUP - Check the dedicated free_plan_used column
+                       $free_plan_used_value = $wpdb->get_var($wpdb->prepare(
+                           "SELECT free_plan_used FROM $table_name 
+                            WHERE user_id = %d 
+                            LIMIT 1",
+                           $current_user_id
+                       ));
+                       
+                       if ($free_plan_used_value == 1) {
+                           $free_plan_used = true;
+                           
+                           // Get additional details for display
+                           $free_plan_details = $wpdb->get_row($wpdb->prepare(
+                               "SELECT start_date, status FROM $table_name 
+                                WHERE user_id = %d 
+                                AND plan_product_id = %d
+                                LIMIT 1",
+                               $current_user_id,
+                               FASHNAI_PLAN_FREE_PRODUCT_ID
+                           ));
+                           
+                           if ($free_plan_details) {
+                               $free_plan_date = $free_plan_details->start_date;
+                               $free_plan_status = $free_plan_details->status;
+                           }
+                       }
+                   }
+               ?>
+               <tr>
+                   <th scope="row">
+                       <?php _e('Try For Free', 'woo-fashnai-preview'); ?>
+                   </th>
+                   <td>
+                       <p style="margin-bottom: 10px;">
+                           <?php _e('Get started with our free trial!', 'woo-fashnai-preview'); ?>
+                       </p>
+                       <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-bottom: 15px;">
+                           <h4 style="margin-top: 0;"><?php _e('Free Trial Plan', 'woo-fashnai-preview'); ?></h4>
+                           <ul style="margin: 10px 0; padding-left: 20px;">
+                               <li><?php _e('3 AI-generated previews', 'woo-fashnai-preview'); ?></li>
+                               <li><?php _e('Valid for 30 days', 'woo-fashnai-preview'); ?></li>
+                               <li><?php _e('One-time purchase per user', 'woo-fashnai-preview'); ?></li>
+                               <li><?php _e('No credit card required', 'woo-fashnai-preview'); ?></li>
+                           </ul>
+                           <p style="margin-bottom: 10px; font-weight: bold; color: #0073aa;">
+                               <?php _e('Price: £0.00', 'woo-fashnai-preview'); ?>
+                           </p>
+                       </div>
+                       
+                       <?php if ($free_plan_used): ?>
+                           <!-- FREE PLAN TOPUP - Button disabled when already used -->
+                           <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #6c757d; margin-bottom: 15px;">
+                               <h4 style="margin-top: 0; color: #6c757d;"><?php _e('Free Trial Status', 'woo-fashnai-preview'); ?></h4>
+                               <p style="margin: 10px 0; color: #6c757d;">
+                                   <strong><?php _e('Status:', 'woo-fashnai-preview'); ?></strong> 
+                                   <span style="color: #dc3545;"><?php _e('Already Used', 'woo-fashnai-preview'); ?></span>
+                                   <?php if (isset($free_plan_status)): ?>
+                                       <br><strong><?php _e('Plan Status:', 'woo-fashnai-preview'); ?></strong> 
+                                       <span style="color: <?php echo ($free_plan_status === 'active') ? '#28a745' : '#ffc107'; ?>;">
+                                           <?php echo ucfirst($free_plan_status); ?>
+                                       </span>
+                                   <?php endif; ?>
+                                   <?php if (isset($free_plan_date)): ?>
+                                       <br><strong><?php _e('Used On:', 'woo-fashnai-preview'); ?></strong> 
+                                       <span><?php echo date('F j, Y', strtotime($free_plan_date)); ?></span>
+                                   <?php endif; ?>
+                               </p>
+                               <p style="margin: 10px 0; color: #6c757d; font-size: 13px;">
+                                   <?php _e('You have already used your free trial plan. You can only purchase it once per account forever.', 'woo-fashnai-preview'); ?>
+                               </p>
+                           </div>
+                           <button type="button" id="try-for-free-button" class="button" disabled>
+                               <span style="text-decoration: line-through;"><?php _e('Try For Free', 'woo-fashnai-preview'); ?></span>
+                           </button>
+                           <p class="description" style="color: #6c757d; font-style: italic;">
+                               <?php _e('Free trial plan has been used. Consider purchasing a paid plan for more credits.', 'woo-fashnai-preview'); ?>
+                           </p>
+                       <?php else: ?>
+                           <!-- FREE PLAN TOPUP - Button enabled when not used -->
+                           <button type="button" id="try-for-free-button" class="button button-primary">
+                               <?php _e('Try For Free', 'woo-fashnai-preview'); ?>
+                           </button>
+                           <p class="description">
+                               <?php _e('Click to get your free trial plan. You can only purchase the free plan once per user account forever.', 'woo-fashnai-preview'); ?>
+                           </p>
+                       <?php endif; ?>
+                   </td>
+               </tr>
+               <?php endif; ?>
+               <!-- END FREE PLAN TOPUP SECTION -->
                <tr id="on-demand-credits-row" style="<?php echo $show_on_demand_initially ? '' : 'display: none;'; ?>">
                     <th scope="row">
                         <?php _e('Buy Credits', 'woo-fashnai-preview'); ?>
@@ -234,9 +337,18 @@
                        </label>
                    </th>
                    <td>
+                                                                       <?php 
+                        $consent_value = get_option('woo_fashnai_require_extra_consents');
+                        // Only default to checked (1) if option doesn't exist at all
+                        if ($consent_value === false) {
+                            $consent_value = 1;
+                        }
+                        ?>
                        <input type="checkbox" id="woo_fashnai_require_extra_consents"
-                              name="woo_fashnai_require_extra_consents" value="1"
-                              <?php checked(get_option('woo_fashnai_require_extra_consents'), 1); ?>>
+                               name="woo_fashnai_require_extra_consents" value="1"
+                               <?php checked($consent_value, 1); ?>>
+                       
+                       
                        <p class="description">
                            <?php _e('If enabled, users must agree to Terms and Refund Policy on first use.', 'woo-fashnai-preview'); ?>
                        </p>
@@ -307,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /* --------------------------------------------------------------
-     *  PLUS / MINUS HANDLERS (disabled – kept only for future use)
+     *  PLUS / MINUS HANDLERS (disabled – kept only for future use)
      * -------------------------------------------------------------- */
     /*
     if (plusBtn && minusBtn && customInput) {
@@ -338,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('<?php echo esc_js(__('Please select a credit pack first.', 'woo-fashnai-preview')); ?>');
             return;
         }
-        window.location.href = 'http://tryontool.com/checkout/?add-to-cart=' + pid;
+        window.location.href = 'https://tryontool.com/checkout/?add-to-cart=' + pid;
     });
 
 
@@ -408,9 +520,25 @@ document.addEventListener('DOMContentLoaded', function () {
     $('#validate-license-key').on('click', e => { e.preventDefault(); validateLicense(); });
 
     /* ----------------------------------------------------------------
+     *  FREE PLAN TOPUP FUNCTIONALITY
+     * ---------------------------------------------------------------- */
+    // FREE PLAN TOPUP - Try For Free button click handler
+    $('#try-for-free-button').on('click', function(e) {
+        e.preventDefault();
+        
+        // FREE PLAN TOPUP - Product ID for the free plan (3 credits, 3 days)
+        const freePlanProductId = <?php echo defined('FASHNAI_PLAN_FREE_PRODUCT_ID') ? FASHNAI_PLAN_FREE_PRODUCT_ID : 5961; ?>;
+        
+        // FREE PLAN TOPUP - Redirect to checkout with free plan product
+        window.location.href = 'https://tryontool.com/checkout/?add-to-cart=' + freePlanProductId;
+    });
+
+    /* ----------------------------------------------------------------
      *  CONSENT RECORDS MODAL  (unchanged)
      * ---------------------------------------------------------------- */
     var consentNonce = '<?php echo wp_create_nonce('fashnai_get_consents'); ?>';
+    
+
 
     $('#view-consent-records').on('click', function () {
         var modal = $('#consent-records-modal');
@@ -450,10 +578,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
  });
 
- </script>
+   </script>
    </div>
 
    <p style="margin-top:2em;font-size:smaller;">
        Try-On Tool is Free Software, licensed under the GNU GPL v2 — NO WARRANTY. 
        <a href="<?php echo plugin_dir_url( dirname( dirname( __FILE__ ) ) ); ?>COPYING.txt" target="_blank">View License</a>
    </p>
+   

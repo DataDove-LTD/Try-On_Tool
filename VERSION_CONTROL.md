@@ -9,9 +9,9 @@ We follow [Semantic Versioning](https://semver.org/) format: `MAJOR.MINOR.PATCH`
 - **MINOR** (1.0.x): New features, backward compatible
 - **PATCH** (1.0.1): Bug fixes, backward compatible
 
-### Current Version: 1.0.0
-- **Previous:** None (Initial Release)
-- **Next Planned:** 1.1.0 (feature release)
+### Current Version: 1.1.0
+- **Previous:** 1.0.0 (Initial Release)
+- **Next Planned:** 1.2.0 (feature release)
 
 ## Git Workflow
 
@@ -31,7 +31,7 @@ git checkout main
 git pull origin main
 
 # Create release branch
-git checkout -b release/v1.0.0
+git checkout -b release/v1.1.0
 
 # Make version updates
 # - Update version in woo-fashnai-preview.php
@@ -40,7 +40,7 @@ git checkout -b release/v1.0.0
 
 # Commit changes
 git add .
-git commit -m "Prepare for v1.0.0 release - Initial release"
+git commit -m "Prepare for v1.1.0 release"
 ```
 
 #### 2. Testing & Validation
@@ -53,10 +53,10 @@ git commit -m "Prepare for v1.0.0 release - Initial release"
 #### 3. Create Release Tag
 ```bash
 # Create annotated tag
-git tag -a v1.0.0 -m "Release version 1.0.0 - Initial release"
+git tag -a v1.1.0 -m "Release version 1.1.0"
 
 # Push tag to remote
-git push origin v1.0.0
+git push origin v1.1.0
 ```
 
 #### 4. Merge to Main
@@ -65,23 +65,23 @@ git push origin v1.0.0
 git checkout main
 
 # Merge release branch
-git merge release/v1.0.0
+git merge release/v1.1.0
 
 # Push to main
 git push origin main
 
 # Delete release branch (optional)
-git branch -d release/v1.0.0
-git push origin --delete release/v1.0.0
+git branch -d release/v1.1.0
+git push origin --delete release/v1.1.0
 ```
 
 #### 5. Create GitHub Release
 1. Go to GitHub repository
 2. Click "Releases" → "Create a new release"
-3. Select the `v1.0.0` tag
-4. Add release title: "Try-On Tool v1.0.0 - Initial Release"
+3. Select the `v1.1.0` tag
+4. Add release title: "Try-On Tool v1.1.0"
 5. Add release notes from CHANGELOG.md
-6. Upload the zip file: `try-on_tool_plugin_v1.0.0.zip`
+6. Upload the zip file: `try-on_tool_plugin_v1.1.0.zip`
 
 ## Version Update Checklist
 
@@ -171,6 +171,7 @@ git push origin --delete feature/new-feature
 | Version | Date | Type | Description |
 |---------|------|------|-------------|
 | 1.0.0 | 2025-08-07 | Initial | Initial release |
+| 1.1.0 | 2025-08-12 | Minor | Feature improvements |
 
 ## Next Release Planning
 

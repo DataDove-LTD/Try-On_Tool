@@ -2,10 +2,10 @@
 
 All notable changes to the Try-On Tool plugin will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-08-07
+## [1.1.0] - 2025-08-12
 
 ### Added
 - Initial release of Try-On Tool plugin
@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend try-on button and modal interface
 - Wasabi S3 integration for image storage
 - GDPR-compliant image handling and user consent
+- Free trial system (3 credits for new users)
 - Credit-based usage system
 - User role and permission controls
 - Automatic image cleanup for inactive users

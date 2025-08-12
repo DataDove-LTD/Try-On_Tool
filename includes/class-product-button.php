@@ -249,20 +249,16 @@ class WooFashnaiPreview_Product_Button {
                     $terms_consent = is_user_logged_in() ? get_user_meta(get_current_user_id(), 'woo_fashnai_terms_consent', true) : false;
                     $refund_consent = is_user_logged_in() ? get_user_meta(get_current_user_id(), 'woo_fashnai_refund_consent', true) : false;
                     ?>
-                    <?php if ($require_extra_consents && is_user_logged_in() && (!$terms_consent || !$refund_consent)) : ?>
+                    <?php if ($require_extra_consents && is_user_logged_in()) : ?>
                         <div class="form-field" style="margin-top:15px;">
-                            <?php if (!$terms_consent): ?>
                             <label>
                                 <input type="checkbox" id="terms_consent" name="terms_consent" required>
-                                <?php _e('I agree to the Terms of Use and Privacy Policy', 'woo-fashnai-preview'); ?>
+                                <?php _e('I agree to the Terms and Privacy Policy.', 'woo-fashnai-preview'); ?>
                             </label>
-                            <?php endif; ?>
-                            <?php if (!$refund_consent): ?>
                             <label>
                                 <input type="checkbox" id="refund_consent" name="refund_consent" required>
-                                <?php _e('I understand that previews may be inaccurate, and agree to abide by the Refund Policy.', 'woo-fashnai-preview'); ?>
+                                <?php _e('I understand previews may be inaccurate and agree to the Refund Policy.', 'woo-fashnai-preview'); ?>
                             </label>
-                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
 
@@ -388,19 +384,23 @@ class WooFashnaiPreview_Product_Button {
         $require_extra_consents = get_option('woo_fashnai_require_extra_consents');
         if ($require_extra_consents && is_user_logged_in()) {
             $uid = get_current_user_id();
-            $terms_consent = get_user_meta($uid, 'woo_fashnai_terms_consent', true);
-            $refund_consent = get_user_meta($uid, 'woo_fashnai_refund_consent', true);
-
-            if (!$terms_consent && empty($_POST['terms_consent'])) {
+            
+            // Always require consent checkboxes when setting is enabled
+            if (empty($_POST['terms_consent'])) {
                 wp_send_json_error(array('message' => __('You must agree to the Terms of Use and Privacy Policy.', 'woo-fashnai-preview')));
             }
-            if (!$refund_consent && empty($_POST['refund_consent'])) {
+            if (empty($_POST['refund_consent'])) {
                 wp_send_json_error(array('message' => __('You must agree to the Refund Policy.', 'woo-fashnai-preview')));
             }
-            if (!$terms_consent && !empty($_POST['terms_consent'])) {
+            
+            // Update consent timestamps if not already set
+            $terms_consent = get_user_meta($uid, 'woo_fashnai_terms_consent', true);
+            $refund_consent = get_user_meta($uid, 'woo_fashnai_refund_consent', true);
+            
+            if (!$terms_consent) {
                 update_user_meta($uid, 'woo_fashnai_terms_consent', current_time('mysql'));
             }
-            if (!$refund_consent && !empty($_POST['refund_consent'])) {
+            if (!$refund_consent) {
                 update_user_meta($uid, 'woo_fashnai_refund_consent', current_time('mysql'));
             }
         }
