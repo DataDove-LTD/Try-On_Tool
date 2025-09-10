@@ -23,23 +23,24 @@
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 
-class WooFashnai_Wasabi {
+class WooFITROOM_Wasabi {
 
     private static $s3 = null;
     private static $bucket = '';
 
     /**
      * Fetch Wasabi credentials in a secure way:
-     *   1. POST license key + site URL to /wasabi/token  → receive short-lived token
-     *   2. GET  /wasabi/secure-credentials?token=…      → receive bucket & keys
+     *   1. POST license key + site URL to /wasabi/token  â†’ receive short-lived token
+     *   2. GET  /wasabi/secure-credentials?token=â€¦      â†’ receive bucket & keys
      */
     private static function fetch_credentials() {
         static $cached = null;
         if ( $cached ) { return $cached; }
 
-        $license_key = get_option( 'woo_fashnai_license_key' );
+        $license_key = get_option( 'woo_fitroom_license_key' );
+        if ( ! $license_key ) { $license_key = get_option( 'WOO_FITROOM_license_key' ); }
         if ( ! $license_key ) {
-            error_log( 'Wasabi Client: license key missing – cannot request token' );
+            error_log( 'Wasabi Client: license key missing â€“ cannot request token' );
             return false;
         }
 
@@ -55,13 +56,13 @@ class WooFashnai_Wasabi {
         ) );
 
         if ( is_wp_error( $token_resp ) ) {
-            error_log( 'Wasabi Client: token request error – ' . $token_resp->get_error_message() );
+            error_log( 'Wasabi Client: token request error â€“ ' . $token_resp->get_error_message() );
             return false;
         }
 
         $token_body = json_decode( wp_remote_retrieve_body( $token_resp ), true );
         if ( empty( $token_body['token'] ) ) {
-            error_log( 'Wasabi Client: token not received – response: ' . print_r( $token_body, true ) );
+            error_log( 'Wasabi Client: token not received â€“ response: ' . print_r( $token_body, true ) );
             return false;
         }
 
@@ -69,7 +70,7 @@ class WooFashnai_Wasabi {
         $cred_resp  = wp_remote_get( $secure_url, array( 'timeout' => 20 ) );
 
         if ( is_wp_error( $cred_resp ) ) {
-            error_log( 'Wasabi Client: credential fetch error – ' . $cred_resp->get_error_message() );
+            error_log( 'Wasabi Client: credential fetch error â€“ ' . $cred_resp->get_error_message() );
             return false;
         }
 
@@ -80,14 +81,14 @@ class WooFashnai_Wasabi {
             return $cred_body;
         }
 
-        error_log( 'Wasabi Client Error: invalid credential response – ' . print_r( $cred_body, true ) );
+        error_log( 'Wasabi Client Error: invalid credential response â€“ ' . print_r( $cred_body, true ) );
         return false;
     }
 
     public static function client() {
         if (self::$s3) { return self::$s3; }
 
-        require_once WOO_FASHNAI_PREVIEW_PLUGIN_DIR . 'vendor/autoload.php';
+        require_once WOO_FITROOM_PREVIEW_PLUGIN_DIR . 'vendor/autoload.php';
 
         $credentials = self::fetch_credentials();
         if ($credentials) {
@@ -104,7 +105,7 @@ class WooFashnai_Wasabi {
         // together with the generic endpoint (s3.wasabisys.com) works for any
         // bucket that was created in the default region.  If your bucket lives
         // in a different region, adjust both the region string and the host
-        // accordingly (e.g.  "eu-west-1"  →  "s3.eu-west-1.wasabisys.com").
+        // accordingly (e.g.  "eu-west-1"  â†’  "s3.eu-west-1.wasabisys.com").
 
         // self::$s3 = new S3Client([
         //     'version'                 => 'latest',
@@ -148,12 +149,12 @@ class WooFashnai_Wasabi {
 
             // Store a reference so our cron/cleanup task can remove the file later.
             // IMPORTANT: the transient itself must NOT expire before we run the
-            // cleanup callback – otherwise we lose the metadata required to
+            // cleanup callback â€“ otherwise we lose the metadata required to
             // delete the image from Wasabi.  Therefore we save it **without**
             // an expiration (third argument = 0) and rely on our own time-
             // stamp check to determine when the object should be removed.
 
-            $transient_key = 'woo_fashnai_image_deletion_' . md5( $key );
+            $transient_key = 'WOO_FITROOM_image_deletion_' . md5( $key );
             $data = array(
                 'user_id'   => $user_id,
                 'key'       => $key,
@@ -168,13 +169,13 @@ class WooFashnai_Wasabi {
 
             /* ------------------------------------------------------------------
                BACK-COMPAT: some older cleanup jobs still look for transients
-               that begin with  "woo_fashnai_image_" (without the "deletion"
+               that begin with  "WOO_FITROOM_image_" (without the "deletion"
                part) and, crucially, they expect the time-stamp to live in an
                "upload_time" field.  To keep those jobs working we create a
                shadow transient in that older format.
             ------------------------------------------------------------------ */
 
-            $legacy_key = 'woo_fashnai_image_' . md5( $key );
+            $legacy_key = 'WOO_FITROOM_image_' . md5( $key );
             if ( ! get_transient( $legacy_key ) ) {
                 set_transient( $legacy_key, $data, 0 );
             }
@@ -264,7 +265,7 @@ class WooFashnai_Wasabi {
         return true;
     }
 
-    /* ───── Helpers ───── */
+    /* â”€â”€â”€â”€â”€ Helpers â”€â”€â”€â”€â”€ */
     private static function user_prefix($user_id) {
         $site_url = parse_url(home_url(), PHP_URL_HOST); // Get the host part of the site URL
         $user = get_userdata($user_id);
@@ -284,3 +285,4 @@ class WooFashnai_Wasabi {
 
     public static function bucket(){return self::$bucket;}
 }
+

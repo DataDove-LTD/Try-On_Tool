@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * A WooCommerce plugin that allows users to virtually try on clothing and accessories.
  *
@@ -39,8 +39,8 @@ if (!isset($_GET['key'])) {
 $key = $_GET['key'];
 
 require_once __DIR__ . '/includes/class-wasabi-client.php';
-$s3 = WooFashnai_Wasabi::client();
-$bucket = WooFashnai_Wasabi::bucket();
+$s3 = WooFITROOM_Wasabi::client();
+$bucket = WooFITROOM_Wasabi::bucket();
 
 try {
     $result = $s3->getObject([

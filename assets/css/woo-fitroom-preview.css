@@ -1,4 +1,4 @@
-/**
+﻿/**
  * A WooCommerce plugin that allows users to virtually try on clothing and accessories.
  *
  * @package Try-On Tool
@@ -20,7 +20,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 /* Styles for TryOnTool Preview */
-.woo-fashnai-preview-test-form {
+.woo-fitroom-preview-test-form {
     max-width: 600px;
     margin: 20px auto;
     padding: 20px;
@@ -29,42 +29,42 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.woo-fashnai-preview-test-form .form-field {
+.woo-fitroom-preview-test-form .form-field {
     margin-bottom: 15px;
 }
 
-.woo-fashnai-preview-test-form label {
+.woo-fitroom-preview-test-form label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
 }
 
-.woo-fashnai-preview-test-form input[type="file"],
-.woo-fashnai-preview-test-form input[type="url"],
-.woo-fashnai-preview-test-form textarea {
+.woo-fitroom-preview-test-form input[type="file"],
+.woo-fitroom-preview-test-form input[type="url"],
+.woo-fitroom-preview-test-form textarea {
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
 
-.woo-fashnai-preview-test-form .form-submit {
+.woo-fitroom-preview-test-form .form-submit {
     margin-top: 20px;
 }
 
-#woo-fashnai-result,
-#woo-fashnai-error {
+#woo-fitroom-result,
+#woo-fitroom-error {
     margin-top: 20px;
     padding: 15px;
     border-radius: 4px;
 }
 
-#woo-fashnai-result {
+#woo-fitroom-result {
     background-color: #d4edda;
     border: 1px solid #c3e6cb;
 }
 
-#woo-fashnai-error {
+#woo-fitroom-error {
     background-color: #f8d7da;
     border: 1px solid #f5c6cb;
 }

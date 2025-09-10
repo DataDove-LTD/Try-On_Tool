@@ -25,56 +25,56 @@
        <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
        <form method="post" action="options.php">
            <?php
-           settings_fields('woo_fashnai_preview_options');
-           do_settings_sections('woo_fashnai_preview_options');
-           $license_status = get_option('woo_fashnai_license_status', 'unknown');
-           $license_expires = get_option('woo_fashnai_license_expires', '');
-           $license_credits = get_option('woo_fashnai_license_credits', '');
-           $plan_product_id = get_option('woo_fashnai_plan_product_id', '');
+           settings_fields('WOO_FITROOM_preview_options');
+           do_settings_sections('WOO_FITROOM_preview_options');
+           $license_status = get_option('WOO_FITROOM_license_status', 'unknown');
+           $license_expires = get_option('WOO_FITROOM_license_expires', '');
+           $license_credits = get_option('WOO_FITROOM_license_credits', '');
+           $plan_product_id = get_option('WOO_FITROOM_plan_product_id', '');
            $show_on_demand_initially = ($license_status === 'valid' && $license_credits !== '' && (int)$license_credits <= 0);
            ?>
            <table class="form-table">
                <tr>
                    <th scope="row">
-                       <label for="woo_fashnai_preview_enabled">
-                           <?php _e('Enable Try-On Tool Preview', 'woo-fashnai-preview'); ?>
+                       <label for="WOO_FITROOM_preview_enabled">
+                           <?php _e('Enable Try-On Tool Preview', 'woo-fitroom-preview'); ?>
                        </label>
                    </th>
                    <td>
-                       <input type="checkbox" id="woo_fashnai_preview_enabled" 
-                              name="woo_fashnai_preview_enabled" 
+                       <input type="checkbox" id="WOO_FITROOM_preview_enabled" 
+                              name="WOO_FITROOM_preview_enabled" 
                               value="1" 
-                              <?php checked(get_option('woo_fashnai_preview_enabled'), 1); ?>>
-                       <p class="description"><?php _e('Master switch for the plugin functionality.', 'woo-fashnai-preview'); ?></p>
+                              <?php checked(get_option('WOO_FITROOM_preview_enabled'), 1); ?>>
+                       <p class="description"><?php _e('Master switch for the plugin functionality.', 'woo-fitroom-preview'); ?></p>
                    </td>
                </tr>
                <tr>
                    <th scope="row">
-                       <label for="woo_fashnai_license_key">
-                           <?php _e('License Key', 'woo-fashnai-preview'); ?>
+                       <label for="WOO_FITROOM_license_key">
+                           <?php _e('License Key', 'woo-fitroom-preview'); ?>
                        </label>
                    </th>
                    <td>
-                       <input type="text" id="woo_fashnai_license_key"
-                              name="woo_fashnai_license_key"
+                       <input type="text" id="WOO_FITROOM_license_key"
+                              name="WOO_FITROOM_license_key"
                               class="regular-text"
-                              value="<?php echo esc_attr(get_option('woo_fashnai_license_key')); ?>">
+                              value="<?php echo esc_attr(get_option('WOO_FITROOM_license_key')); ?>">
                        <button type="button" id="validate-license-key" class="button button-secondary" style="margin-left: 10px;">
-                           <?php _e('Validate Key', 'woo-fashnai-preview'); ?>
+                           <?php _e('Validate Key', 'woo-fitroom-preview'); ?>
                        </button>
                        <p class="description">
-                           <?php _e('Enter the license key you received via email after purchase.', 'woo-fashnai-preview'); ?>
+                           <?php _e('Enter the license key you received via email after purchase.', 'woo-fitroom-preview'); ?>
                        </p>
                        <div id="license-status" style="margin-top: 10px;">
                            <?php if ($license_status === 'valid'): ?>
-                               <p style="color: green;"><strong><?php _e('Status:', 'woo-fashnai-preview'); ?></strong> <?php _e('Active', 'woo-fashnai-preview'); ?>
+                               <p style="color: green;"><strong><?php _e('Status:', 'woo-fitroom-preview'); ?></strong> <?php _e('Active', 'woo-fitroom-preview'); ?>
                                    <?php if($license_expires) printf(__(' (Expires: %s)'), esc_html($license_expires)); ?>
                                    <?php if($license_credits !== '') printf(__(' | Credits: %s'), esc_html($license_credits)); ?>
                                </p>
                            <?php elseif ($license_status === 'invalid'): ?>
-                                <p style="color: red;"><strong><?php _e('Status:', 'woo-fashnai-preview'); ?></strong> <?php _e('Invalid or Expired', 'woo-fashnai-preview'); ?></p>
+                                <p style="color: red;"><strong><?php _e('Status:', 'woo-fitroom-preview'); ?></strong> <?php _e('Invalid or Expired', 'woo-fitroom-preview'); ?></p>
                             <?php else: ?>
-                                <p><strong><?php _e('Status:', 'woo-fashnai-preview'); ?></strong> <?php _e('Unknown (Please validate)', 'woo-fashnai-preview'); ?></p>
+                                <p><strong><?php _e('Status:', 'woo-fitroom-preview'); ?></strong> <?php _e('Unknown (Please validate)', 'woo-fitroom-preview'); ?></p>
                             <?php endif; ?>
                        </div>
                         <div id="license-validation-result" style="margin-top: 10px; padding: 10px; display: none;"></div>
@@ -82,23 +82,23 @@
                </tr>
                <tr>
                    <th scope="row">
-                       <?php _e('Purchase Plans', 'woo-fashnai-preview'); ?>
+                       <?php _e('Purchase Plans', 'woo-fitroom-preview'); ?>
                    </th>
                    <td>
                        <p style="margin-bottom: 10px;">
-                           <?php _e('Need to purchase a plan?', 'woo-fashnai-preview'); ?>
+                           <?php _e('Need to purchase a plan?', 'woo-fitroom-preview'); ?>
                        </p>
-                                               <a href="https://tryontool.com/plans" target="_blank" class="button button-primary" style="text-decoration: none;">
-                           <?php _e('Visit Try-On Tool Website', 'woo-fashnai-preview'); ?>
+                       <a href="https://tryontool.com/plans" target="_blank" class="button button-primary" style="text-decoration: none;">
+                           <?php _e('Visit Try-On Tool Website', 'woo-fitroom-preview'); ?>
                        </a>
                        <p class="description">
-                           <?php _e('Browse our plans and purchase additional credits for your Try-On Tool plugin.', 'woo-fashnai-preview'); ?>
+                           <?php _e('Browse our plans and purchase additional credits for your Try-On Tool plugin.', 'woo-fitroom-preview'); ?>
                        </p>
                    </td>
                </tr>
                <!-- FREE PLAN TOPUP SECTION - appears when license key is empty -->
                <?php 
-               $license_key = get_option('woo_fashnai_license_key');
+               $license_key = get_option('WOO_FITROOM_license_key');
                if (empty($license_key)): 
                    
                    // FREE PLAN TOPUP - Check if FREE plan has been used by this account
@@ -106,7 +106,7 @@
                    $table_name = $wpdb->prefix . 'user_plans';
                    $free_plan_used = false;
                    
-                   if (defined('FASHNAI_PLAN_FREE_PRODUCT_ID')) {
+                   if (defined('FITROOM_PLAN_FREE_PRODUCT_ID')) {
                        $current_user_id = get_current_user_id();
                        
                        // FREE PLAN TOPUP - Check the dedicated free_plan_used column
@@ -127,7 +127,7 @@
                                 AND plan_product_id = %d
                                 LIMIT 1",
                                $current_user_id,
-                               FASHNAI_PLAN_FREE_PRODUCT_ID
+                               FITROOM_PLAN_FREE_PRODUCT_ID
                            ));
                            
                            if ($free_plan_details) {
@@ -139,60 +139,60 @@
                ?>
                <tr>
                    <th scope="row">
-                       <?php _e('Try For Free', 'woo-fashnai-preview'); ?>
+                       <?php _e('Try For Free', 'woo-fitroom-preview'); ?>
                    </th>
                    <td>
                        <p style="margin-bottom: 10px;">
-                           <?php _e('Get started with our free trial!', 'woo-fashnai-preview'); ?>
+                           <?php _e('Get started with our free trial!', 'woo-fitroom-preview'); ?>
                        </p>
                        <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-bottom: 15px;">
-                           <h4 style="margin-top: 0;"><?php _e('Free Trial Plan', 'woo-fashnai-preview'); ?></h4>
+                           <h4 style="margin-top: 0;"><?php _e('Free Trial Plan', 'woo-fitroom-preview'); ?></h4>
                            <ul style="margin: 10px 0; padding-left: 20px;">
-                               <li><?php _e('3 AI-generated previews', 'woo-fashnai-preview'); ?></li>
-                               <li><?php _e('Valid for 30 days', 'woo-fashnai-preview'); ?></li>
-                               <li><?php _e('One-time purchase per user', 'woo-fashnai-preview'); ?></li>
-                               <li><?php _e('No credit card required', 'woo-fashnai-preview'); ?></li>
+                               <li><?php _e('3 AI-generated previews', 'woo-fitroom-preview'); ?></li>
+                               <li><?php _e('Valid for 30 days', 'woo-fitroom-preview'); ?></li>
+                               <li><?php _e('One-time purchase per user', 'woo-fitroom-preview'); ?></li>
+                               <li><?php _e('No credit card required', 'woo-fitroom-preview'); ?></li>
                            </ul>
                            <p style="margin-bottom: 10px; font-weight: bold; color: #0073aa;">
-                               <?php _e('Price: £0.00', 'woo-fashnai-preview'); ?>
+                               <?php _e('Price: Â£0.00', 'woo-fitroom-preview'); ?>
                            </p>
                        </div>
                        
                        <?php if ($free_plan_used): ?>
                            <!-- FREE PLAN TOPUP - Button disabled when already used -->
                            <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #6c757d; margin-bottom: 15px;">
-                               <h4 style="margin-top: 0; color: #6c757d;"><?php _e('Free Trial Status', 'woo-fashnai-preview'); ?></h4>
+                               <h4 style="margin-top: 0; color: #6c757d;"><?php _e('Free Trial Status', 'woo-fitroom-preview'); ?></h4>
                                <p style="margin: 10px 0; color: #6c757d;">
-                                   <strong><?php _e('Status:', 'woo-fashnai-preview'); ?></strong> 
-                                   <span style="color: #dc3545;"><?php _e('Already Used', 'woo-fashnai-preview'); ?></span>
+                                   <strong><?php _e('Status:', 'woo-fitroom-preview'); ?></strong> 
+                                   <span style="color: #dc3545;"><?php _e('Already Used', 'woo-fitroom-preview'); ?></span>
                                    <?php if (isset($free_plan_status)): ?>
-                                       <br><strong><?php _e('Plan Status:', 'woo-fashnai-preview'); ?></strong> 
+                                       <br><strong><?php _e('Plan Status:', 'woo-fitroom-preview'); ?></strong> 
                                        <span style="color: <?php echo ($free_plan_status === 'active') ? '#28a745' : '#ffc107'; ?>;">
                                            <?php echo ucfirst($free_plan_status); ?>
                                        </span>
                                    <?php endif; ?>
                                    <?php if (isset($free_plan_date)): ?>
-                                       <br><strong><?php _e('Used On:', 'woo-fashnai-preview'); ?></strong> 
+                                       <br><strong><?php _e('Used On:', 'woo-fitroom-preview'); ?></strong> 
                                        <span><?php echo date('F j, Y', strtotime($free_plan_date)); ?></span>
                                    <?php endif; ?>
                                </p>
                                <p style="margin: 10px 0; color: #6c757d; font-size: 13px;">
-                                   <?php _e('You have already used your free trial plan. You can only purchase it once per account forever.', 'woo-fashnai-preview'); ?>
+                                   <?php _e('You have already used your free trial plan. You can only purchase it once per account forever.', 'woo-fitroom-preview'); ?>
                                </p>
                            </div>
                            <button type="button" id="try-for-free-button" class="button" disabled>
-                               <span style="text-decoration: line-through;"><?php _e('Try For Free', 'woo-fashnai-preview'); ?></span>
+                               <span style="text-decoration: line-through;"><?php _e('Try For Free', 'woo-fitroom-preview'); ?></span>
                            </button>
                            <p class="description" style="color: #6c757d; font-style: italic;">
-                               <?php _e('Free trial plan has been used. Consider purchasing a paid plan for more credits.', 'woo-fashnai-preview'); ?>
+                               <?php _e('Free trial plan has been used. Consider purchasing a paid plan for more credits.', 'woo-fitroom-preview'); ?>
                            </p>
                        <?php else: ?>
                            <!-- FREE PLAN TOPUP - Button enabled when not used -->
                            <button type="button" id="try-for-free-button" class="button button-primary">
-                               <?php _e('Try For Free', 'woo-fashnai-preview'); ?>
+                               <?php _e('Try For Free', 'woo-fitroom-preview'); ?>
                            </button>
                            <p class="description">
-                               <?php _e('Click to get your free trial plan. You can only purchase the free plan once per user account forever.', 'woo-fashnai-preview'); ?>
+                               <?php _e('Click to get your free trial plan. You can only purchase the free plan once per user account forever.', 'woo-fitroom-preview'); ?>
                            </p>
                        <?php endif; ?>
                    </td>
@@ -201,25 +201,25 @@
                <!-- END FREE PLAN TOPUP SECTION -->
                <tr id="on-demand-credits-row" style="<?php echo $show_on_demand_initially ? '' : 'display: none;'; ?>">
                     <th scope="row">
-                        <?php _e('Buy Credits', 'woo-fashnai-preview'); ?>
+                        <?php _e('Buy Credits', 'woo-fitroom-preview'); ?>
                     </th>
                     <td>
                         <?php
                             // --- Build credit pack options (static pricing) ---
                             $credit_packs = array(
-                                60  => array( 'id' => defined('FASHNAI_CREDIT_PACK_100_PRODUCT_ID')  ? FASHNAI_CREDIT_PACK_100_PRODUCT_ID  : 3515, 'price' => 5.99  ),
-                                120  => array( 'id' => defined('FASHNAI_CREDIT_PACK_200_PRODUCT_ID')  ? FASHNAI_CREDIT_PACK_200_PRODUCT_ID  : 3516, 'price' => 11.99  ),
-                                240  => array( 'id' => defined('FASHNAI_CREDIT_PACK_300_PRODUCT_ID')  ? FASHNAI_CREDIT_PACK_300_PRODUCT_ID  : 3517, 'price' => 23.99 ),
+                                60  => array( 'id' => defined('FITROOM_CREDIT_PACK_100_PRODUCT_ID')  ? FITROOM_CREDIT_PACK_100_PRODUCT_ID  : 3515, 'price' => 5.99  ),
+                                120  => array( 'id' => defined('FITROOM_CREDIT_PACK_200_PRODUCT_ID')  ? FITROOM_CREDIT_PACK_200_PRODUCT_ID  : 3516, 'price' => 11.99  ),
+                                240  => array( 'id' => defined('FITROOM_CREDIT_PACK_300_PRODUCT_ID')  ? FITROOM_CREDIT_PACK_300_PRODUCT_ID  : 3517, 'price' => 23.99 ),
                                 /*
-                                400  => array( 'id' => defined('FASHNAI_CREDIT_PACK_400_PRODUCT_ID')  ? FASHNAI_CREDIT_PACK_400_PRODUCT_ID  : 3518, 'price' => 170 ),
-                                500  => array( 'id' => defined('FASHNAI_CREDIT_PACK_500_PRODUCT_ID')  ? FASHNAI_CREDIT_PACK_500_PRODUCT_ID  : 3519, 'price' => 210 ),
-                                600  => array( 'id' => defined('FASHNAI_CREDIT_PACK_600_PRODUCT_ID')  ? FASHNAI_CREDIT_PACK_600_PRODUCT_ID  : 3520, 'price' => 250 ),
-                                700  => array( 'id' => defined('FASHNAI_CREDIT_PACK_700_PRODUCT_ID')  ? FASHNAI_CREDIT_PACK_700_PRODUCT_ID  : 3521, 'price' => 290 ),
-                                800  => array( 'id' => defined('FASHNAI_CREDIT_PACK_800_PRODUCT_ID')  ? FASHNAI_CREDIT_PACK_800_PRODUCT_ID  : 3522, 'price' => 330 ),
-                                900  => array( 'id' => defined('FASHNAI_CREDIT_PACK_900_PRODUCT_ID')  ? FASHNAI_CREDIT_PACK_900_PRODUCT_ID  : 3523, 'price' => 370 ),
-                                1000 => array( 'id' => defined('FASHNAI_CREDIT_PACK_1000_PRODUCT_ID') ? FASHNAI_CREDIT_PACK_1000_PRODUCT_ID : 3524, 'price' => 410 ),
-                                1100 => array( 'id' => defined('FASHNAI_CREDIT_PACK_1100_PRODUCT_ID') ? FASHNAI_CREDIT_PACK_1100_PRODUCT_ID : 3525, 'price' => 450 ),
-                                1200 => array( 'id' => defined('FASHNAI_CREDIT_PACK_1200_PRODUCT_ID') ? FASHNAI_CREDIT_PACK_1200_PRODUCT_ID : 3526, 'price' => 490 ),
+                                400  => array( 'id' => defined('FITROOM_CREDIT_PACK_400_PRODUCT_ID')  ? FITROOM_CREDIT_PACK_400_PRODUCT_ID  : 3518, 'price' => 170 ),
+                                500  => array( 'id' => defined('FITROOM_CREDIT_PACK_500_PRODUCT_ID')  ? FITROOM_CREDIT_PACK_500_PRODUCT_ID  : 3519, 'price' => 210 ),
+                                600  => array( 'id' => defined('FITROOM_CREDIT_PACK_600_PRODUCT_ID')  ? FITROOM_CREDIT_PACK_600_PRODUCT_ID  : 3520, 'price' => 250 ),
+                                700  => array( 'id' => defined('FITROOM_CREDIT_PACK_700_PRODUCT_ID')  ? FITROOM_CREDIT_PACK_700_PRODUCT_ID  : 3521, 'price' => 290 ),
+                                800  => array( 'id' => defined('FITROOM_CREDIT_PACK_800_PRODUCT_ID')  ? FITROOM_CREDIT_PACK_800_PRODUCT_ID  : 3522, 'price' => 330 ),
+                                900  => array( 'id' => defined('FITROOM_CREDIT_PACK_900_PRODUCT_ID')  ? FITROOM_CREDIT_PACK_900_PRODUCT_ID  : 3523, 'price' => 370 ),
+                                1000 => array( 'id' => defined('FITROOM_CREDIT_PACK_1000_PRODUCT_ID') ? FITROOM_CREDIT_PACK_1000_PRODUCT_ID : 3524, 'price' => 410 ),
+                                1100 => array( 'id' => defined('FITROOM_CREDIT_PACK_1100_PRODUCT_ID') ? FITROOM_CREDIT_PACK_1100_PRODUCT_ID : 3525, 'price' => 450 ),
+                                1200 => array( 'id' => defined('FITROOM_CREDIT_PACK_1200_PRODUCT_ID') ? FITROOM_CREDIT_PACK_1200_PRODUCT_ID : 3526, 'price' => 490 ),
                                 */
                             );
                         ?>
@@ -235,61 +235,61 @@
                             <button type="button" id="custom-credit-minus" class="button">&minus;</button>
                             <input type="text" id="custom-credit-value" value="100" readonly style="width:80px; text-align:center;" />
                             <button type="button" id="custom-credit-plus" class="button">+</button>
-                            <span class="description" style="margin-left:8px;"><?php _e('Custom amount (multiples of 100)', 'woo-fashnai-preview'); ?></span>
+                            <span class="description" style="margin-left:8px;"><?php _e('Custom amount (multiples of 100)', 'woo-fitroom-preview'); ?></span>
                         </div>
                         -->
 
                         <div id="credit-pack-selected-display" style="text-align:center; margin-bottom:10px;">
-                            <span id="selected-credits"></span> credits — <span id="selected-price"></span>
+                            <span id="selected-credits"></span> credits ” <span id="selected-price"></span>
                         </div>
                         <button type="button" id="buy-on-demand-credits" class="button button-primary">
-                            <?php _e('Buy On-Demand Credits', 'woo-fashnai-preview'); ?>
+                            <?php _e('Buy On-Demand Credits', 'woo-fitroom-preview'); ?>
                         </button>
                         <p class="description">
-                            <?php _e('Choose a credit bundle then click "Buy" to proceed to checkout.', 'woo-fashnai-preview'); ?>
+                            <?php _e('Choose a credit bundle then click "Buy" to proceed to checkout.', 'woo-fitroom-preview'); ?>
                         </p>
                     </td>
                </tr>
                <tr>
                    <th scope="row">
-                       <label for="woo_fashnai_daily_credits">
-                           <?php _e('Daily Credits Per User (Visual Only)', 'woo-fashnai-preview'); ?>
+                       <label for="WOO_FITROOM_daily_credits">
+                           <?php _e('Daily Credits Per User (Visual Only)', 'woo-fitroom-preview'); ?>
                        </label>
                    </th>
                    <td>
-                       <input type="number" id="woo_fashnai_daily_credits"
-                              name="woo_fashnai_daily_credits"
+                       <input type="number" id="WOO_FITROOM_daily_credits"
+                              name="WOO_FITROOM_daily_credits"
                               class="small-text"
-                              value="<?php echo esc_attr(get_option('woo_fashnai_daily_credits', 0)); ?>" min="0">
+                              value="<?php echo esc_attr(get_option('WOO_FITROOM_daily_credits', 0)); ?>" min="0">
                        <p class="description">
-                           <?php _e('Optional: Set a visual daily limit reminder for users. Actual credits are managed by the server.', 'woo-fashnai-preview'); ?>
+                           <?php _e('Optional: Set a visual daily limit reminder for users. Actual credits are managed by the server.', 'woo-fitroom-preview'); ?>
                        </p>
                    </td>
                </tr>
                <tr>
                    <th scope="row">
-                       <label for="woo_fashnai_logged_in_only">
-                           <?php _e('Restrict to Logged-in Users', 'woo-fashnai-preview'); ?>
+                       <label for="WOO_FITROOM_logged_in_only">
+                           <?php _e('Restrict to Logged-in Users', 'woo-fitroom-preview'); ?>
                        </label>
                    </th>
                    <td>
-                       <input type="checkbox" id="woo_fashnai_logged_in_only"
-                              name="woo_fashnai_logged_in_only" value="1"
-                              <?php checked(get_option('woo_fashnai_logged_in_only'), 1); ?>>
+                       <input type="checkbox" id="WOO_FITROOM_logged_in_only"
+                              name="WOO_FITROOM_logged_in_only" value="1"
+                              <?php checked(get_option('WOO_FITROOM_logged_in_only'), 1); ?>>
                        <p class="description">
-                           <?php _e('Enable this to show the Try-On button only to logged-in customers.', 'woo-fashnai-preview'); ?>
+                           <?php _e('Enable this to show the Try-On button only to logged-in customers.', 'woo-fitroom-preview'); ?>
                        </p>
                    </td>
                </tr>
                <tr>
                    <th scope="row">
-                       <label for="woo_fashnai_allowed_roles">
-                           <?php _e('Allowed User Roles', 'woo-fashnai-preview'); ?>
+                       <label for="WOO_FITROOM_allowed_roles">
+                           <?php _e('Allowed User Roles', 'woo-fitroom-preview'); ?>
                        </label>
                    </th>
                    <td>
-                       <?php $all_roles = wp_roles()->roles; $selected_roles = (array) get_option('woo_fashnai_allowed_roles', array()); ?>
-                       <select id="woo_fashnai_allowed_roles" name="woo_fashnai_allowed_roles[]" multiple size="4">
+                       <?php $all_roles = wp_roles()->roles; $selected_roles = (array) get_option('WOO_FITROOM_allowed_roles', array()); ?>
+                       <select id="WOO_FITROOM_allowed_roles" name="WOO_FITROOM_allowed_roles[]" multiple size="4">
                            <?php foreach ($all_roles as $role_key => $role) : ?>
                                <option value="<?php echo esc_attr($role_key); ?>" <?php selected(in_array($role_key, $selected_roles), true); ?>>
                                    <?php echo esc_html($role['name']); ?>
@@ -297,71 +297,71 @@
                            <?php endforeach; ?>
                        </select>
                        <p class="description">
-                           <?php _e('Leave empty to allow all roles (if logged-in restriction applies).', 'woo-fashnai-preview'); ?>
+                           <?php _e('Leave empty to allow all roles (if logged-in restriction applies).', 'woo-fitroom-preview'); ?>
                        </p>
                    </td>
                </tr>
                <tr>
                    <th scope="row">
-                       <label for="woo_fashnai_allowed_user_ids">
-                           <?php _e('Specific Allowed User IDs', 'woo-fashnai-preview'); ?>
+                       <label for="WOO_FITROOM_allowed_user_ids">
+                           <?php _e('Specific Allowed User IDs', 'woo-fitroom-preview'); ?>
                        </label>
                    </th>
                    <td>
-                       <textarea id="woo_fashnai_allowed_user_ids" name="woo_fashnai_allowed_user_ids" rows="3" cols="50" class="large-text code"><?php echo esc_textarea(get_option('woo_fashnai_allowed_user_ids', '')); ?></textarea>
+                       <textarea id="WOO_FITROOM_allowed_user_ids" name="WOO_FITROOM_allowed_user_ids" rows="3" cols="50" class="large-text code"><?php echo esc_textarea(get_option('WOO_FITROOM_allowed_user_ids', '')); ?></textarea>
                        <p class="description">
-                           <?php _e('Comma-separated list of WordPress user IDs that can access the Try-On feature (overrides role setting). Leave empty to disable.', 'woo-fashnai-preview'); ?>
+                           <?php _e('Comma-separated list of WordPress user IDs that can access the Try-On feature (overrides role setting). Leave empty to disable.', 'woo-fitroom-preview'); ?>
                        </p>
                    </td>
                </tr>
                <tr>
                    <th scope="row">
-                       <label for="woo_fashnai_required_user_tag">
-                           <?php _e('Required User Tag (Meta Key: woo_tryontool_user_tag)', 'woo-fashnai-preview'); ?>
+                       <label for="WOO_FITROOM_required_user_tag">
+                           <?php _e('Required User Tag (Meta Key: woo_tryontool_user_tag)', 'woo-fitroom-preview'); ?>
                        </label>
                    </th>
                    <td>
-                        <input type="text" id="woo_fashnai_required_user_tag"
-                            name="woo_fashnai_required_user_tag"
+                        <input type="text" id="WOO_FITROOM_required_user_tag"
+                            name="WOO_FITROOM_required_user_tag"
                             class="regular-text"
-                            value="<?php echo esc_attr(get_option('woo_fashnai_required_user_tag', '')); ?>">
+                            value="<?php echo esc_attr(get_option('WOO_FITROOM_required_user_tag', '')); ?>">
                        <p class="description">
-                           <?php _e('If set, only users with this exact value in their `woo_tryontool_user_tag` user meta field can use the feature.', 'woo-fashnai-preview'); ?>
+                           <?php _e('If set, only users with this exact value in their `woo_tryontool_user_tag` user meta field can use the feature.', 'woo-fitroom-preview'); ?>
                        </p>
                    </td>
                </tr>
                <tr>
                    <th scope="row">
-                       <label for="woo_fashnai_require_extra_consents">
-                           <?php _e('Require Terms/Refund Consent on First Use', 'woo-fashnai-preview'); ?>
+                       <label for="WOO_FITROOM_require_extra_consents">
+                           <?php _e('Require Terms/Refund Consent on First Use', 'woo-fitroom-preview'); ?>
                        </label>
                    </th>
                    <td>
                                                                        <?php 
-                        $consent_value = get_option('woo_fashnai_require_extra_consents');
+                        $consent_value = get_option('WOO_FITROOM_require_extra_consents');
                         // Only default to checked (1) if option doesn't exist at all
                         if ($consent_value === false) {
                             $consent_value = 1;
                         }
                         ?>
-                       <input type="checkbox" id="woo_fashnai_require_extra_consents"
-                               name="woo_fashnai_require_extra_consents" value="1"
+                       <input type="checkbox" id="WOO_FITROOM_require_extra_consents"
+                               name="WOO_FITROOM_require_extra_consents" value="1"
                                <?php checked($consent_value, 1); ?>>
                        
                        
                        <p class="description">
-                           <?php _e('If enabled, users must agree to Terms and Refund Policy on first use.', 'woo-fashnai-preview'); ?>
+                           <?php _e('If enabled, users must agree to Terms and Refund Policy on first use.', 'woo-fitroom-preview'); ?>
                        </p>
                    </td>
                </tr>
                <!-- Records of Consent -->
                <tr>
-                    <th scope="row"><?php _e('Records of Consent', 'woo-fashnai-preview'); ?></th>
+                    <th scope="row"><?php _e('Records of Consent', 'woo-fitroom-preview'); ?></th>
                     <td>
                         <button type="button" id="view-consent-records" class="button">
-                            <?php _e('View Records', 'woo-fashnai-preview'); ?>
+                            <?php _e('View Records', 'woo-fitroom-preview'); ?>
                         </button>
-                        <p class="description"><?php _e('View user consent records for image processing.', 'woo-fashnai-preview'); ?></p>
+                        <p class="description"><?php _e('View user consent records for image processing.', 'woo-fitroom-preview'); ?></p>
                     </td>
                </tr>
            </table>
@@ -372,7 +372,7 @@
        <div id="consent-records-modal" style="display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999999;">
             <div class="modal-content" style="background:#fff; padding:20px; max-width:700px; margin:5% auto; position:relative; max-height:80%; overflow-y:auto;">
                 <span class="close-consent-modal" style="position:absolute; top:10px; right:15px; font-size:24px; cursor:pointer;">&times;</span>
-                <h2><?php _e('User Consent Records','woo-fashnai-preview'); ?></h2>
+                <h2><?php _e('User Consent Records','woo-fitroom-preview'); ?></h2>
                 <div class="modal-body"></div>
             </div>
        </div>
@@ -381,7 +381,7 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     /* ----------------------------------------------------------------
-     *  CREDIT‑PACK UI
+     *  CREDITâ€‘PACK UI
      * ---------------------------------------------------------------- */
     const creditPacks  = JSON.parse('<?php echo wp_json_encode($credit_packs); ?>');
 
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateDisplay () {
         if (!creditPacks[selectedCredits]) { return; }
         creditsLbl.textContent      = selectedCredits;
-        priceLbl.textContent        = '£' + creditPacks[selectedCredits].price;
+        priceLbl.textContent        = 'Â£' + creditPacks[selectedCredits].price;
         buyBtn.dataset.productId    = creditPacks[selectedCredits].id;
         if (customInput) { customInput.value = selectedCredits; }
 
@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* quick‑pick buttons */
+    /* quickâ€‘pick buttons */
     quickButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             selectedCredits = parseInt(btn.dataset.credits, 10);
@@ -419,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /* --------------------------------------------------------------
-     *  PLUS / MINUS HANDLERS (disabled – kept only for future use)
+     *  PLUS / MINUS HANDLERS (disabled â€“ kept only for future use)
      * -------------------------------------------------------------- */
     /*
     if (plusBtn && minusBtn && customInput) {
@@ -442,16 +442,24 @@ document.addEventListener('DOMContentLoaded', function () {
     /* initialise */
     updateDisplay();
 
-    /* buy‑button click */
+    /* buyâ€‘button click */
     buyBtn.addEventListener('click', e => {
         e.preventDefault();
         const pid = buyBtn.dataset.productId;
         if (!pid) {
-            alert('<?php echo esc_js(__('Please select a credit pack first.', 'woo-fashnai-preview')); ?>');
+            alert('<?php echo esc_js(__('Please select a credit pack first.', 'woo-fitroom-preview')); ?>');
             return;
         }
         window.location.href = 'https://tryontool.com/checkout/?add-to-cart=' + pid;
     });
+
+    /* --------------------------------------------------------------
+     *  UPGRADE / DOWNGRADE SWITCH FLOW (simplified redirect)
+     * -------------------------------------------------------------- */
+    // document.getElementById('FitRoom-change-plan').addEventListener('click', function(e){
+    //     e.preventDefault();
+    //     window.location.href = 'https://tryontool.com/my-account/subscriptions/';
+    // });
 
 
 
@@ -461,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const $ = jQuery;
 
     function validateLicense () {
-        var licenseKey    = $('#woo_fashnai_license_key').val();
+        var licenseKey    = $('#WOO_FITROOM_license_key').val();
         var resultDiv     = $('#license-validation-result');
         var statusDiv     = $('#license-status');
         var validateBtn   = $('#validate-license-key');
@@ -469,14 +477,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!licenseKey) { return; }
 
         validateBtn.prop('disabled', true)
-                   .text('<?php _e('Validating…', 'woo-fashnai-preview'); ?>');
+                   .text('<?php _e('Validating...', 'woo-fitroom-preview'); ?>');
         resultDiv.removeClass('notice-success notice-error').hide().empty();
-        statusDiv.html('<p><strong><?php _e('Status:', 'woo-fashnai-preview'); ?></strong> <?php _e('Checking…', 'woo-fashnai-preview'); ?></p>');
+        statusDiv.html('<p><strong><?php _e('Status:', 'woo-fitroom-preview'); ?></strong> <?php _e('Checking...', 'woo-fitroom-preview'); ?></p>');
         $('#on-demand-credits-row').hide();
 
         $.post(ajaxurl, {
-            action      : 'woo_fashnai_validate_license',
-            nonce       : '<?php echo wp_create_nonce('fashnai_validate_license_nonce'); ?>',
+            action      : 'woo_fitroom_validate_license',
+            nonce       : '<?php echo wp_create_nonce('fitroom_validate_license_nonce'); ?>',
             license_key : licenseKey
         }, function (response) {
 
@@ -484,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 resultDiv.addClass('notice notice-success')
                          .html('<p>' + response.data.message + '</p>').show();
                 statusDiv.html(
-                    '<p style="color:green;"><strong><?php _e('Status:', 'woo-fashnai-preview'); ?></strong> <?php _e('Active', 'woo-fashnai-preview'); ?>' +
+                    '<p style="color:green;"><strong><?php _e('Status:', 'woo-fitroom-preview'); ?></strong> <?php _e('Active', 'woo-fitroom-preview'); ?>' +
                     (response.data.expires  ? ' (Expires: ' + response.data.expires  + ')' : '') +
                     (response.data.credits !== undefined ? ' | Credits: ' + response.data.credits : '') +
                     '</p>'
@@ -497,22 +505,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 resultDiv.addClass('notice notice-error')
                          .html('<p>' + response.data.message + '</p>').show();
                 statusDiv.html(
-                    '<p style="color:red;"><strong><?php _e('Status:', 'woo-fashnai-preview'); ?></strong> <?php _e('Invalid or Expired', 'woo-fashnai-preview'); ?></p>'
+                    '<p style="color:red;"><strong><?php _e('Status:', 'woo-fitroom-preview'); ?></strong> <?php _e('Invalid or Expired', 'woo-fitroom-preview'); ?></p>'
                 );
                 $('#on-demand-credits-row').hide();
             }
 
         }).fail(function () {
             resultDiv.addClass('notice notice-error')
-                     .html('<p><?php _e('AJAX error validating license.', 'woo-fashnai-preview'); ?></p>').show();
+                     .html('<p><?php _e('AJAX error validating license.', 'woo-fitroom-preview'); ?></p>').show();
             statusDiv.html(
-                '<p style="color:red;"><strong><?php _e('Status:', 'woo-fashnai-preview'); ?></strong> <?php _e('Validation Error', 'woo-fashnai-preview'); ?></p>'
+                '<p style="color:red;"><strong><?php _e('Status:', 'woo-fitroom-preview'); ?></strong> <?php _e('Validation Error', 'woo-fitroom-preview'); ?></p>'
             );
             $('#on-demand-credits-row').hide();
 
         }).always(function () {
             validateBtn.prop('disabled', false)
-                       .text('<?php _e('Validate Key', 'woo-fashnai-preview'); ?>');
+                       .text('<?php _e('Validate Key', 'woo-fitroom-preview'); ?>');
         });
     }
 
@@ -527,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         
         // FREE PLAN TOPUP - Product ID for the free plan (3 credits, 3 days)
-        const freePlanProductId = <?php echo defined('FASHNAI_PLAN_FREE_PRODUCT_ID') ? FASHNAI_PLAN_FREE_PRODUCT_ID : 5961; ?>;
+        const freePlanProductId = <?php echo defined('FITROOM_PLAN_FREE_PRODUCT_ID') ? FITROOM_PLAN_FREE_PRODUCT_ID : 5961; ?>;
         
         // FREE PLAN TOPUP - Redirect to checkout with free plan product
         window.location.href = 'https://tryontool.com/checkout/?add-to-cart=' + freePlanProductId;
@@ -536,17 +544,17 @@ document.addEventListener('DOMContentLoaded', function () {
     /* ----------------------------------------------------------------
      *  CONSENT RECORDS MODAL  (unchanged)
      * ---------------------------------------------------------------- */
-    var consentNonce = '<?php echo wp_create_nonce('fashnai_get_consents'); ?>';
+    var consentNonce = '<?php echo wp_create_nonce('FITROOM_get_consents'); ?>';
     
 
 
     $('#view-consent-records').on('click', function () {
         var modal = $('#consent-records-modal');
-        modal.find('.modal-body').html('<p><?php _e('Loading…', 'woo-fashnai-preview'); ?></p>');
+        modal.find('.modal-body').html('<p><?php _e('Loading...', 'woo-fitroom-preview'); ?></p>');
         modal.show();
 
         $.post(ajaxurl, {
-            action : 'woo_fashnai_get_consents',
+            action : 'WOO_FITROOM_get_consents',
             nonce  : consentNonce
         }, function (res) {
             if (res.success) {
@@ -557,7 +565,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         html += '<tr><td>' + r.user_id + '</td><td>' + r.email + '</td><td>' + consent + '</td><td>' + (r.last_login || '') + '</td></tr>';
                     });
                 } else {
-                    html += '<tr><td colspan="4"><?php _e('No records found.', 'woo-fashnai-preview'); ?></td></tr>';
+                    html += '<tr><td colspan="4"><?php _e('No records found.', 'woo-fitroom-preview'); ?></td></tr>';
                 }
                 html += '</tbody></table>';
                 modal.find('.modal-body').html(html);
@@ -565,7 +573,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 modal.find('.modal-body').html('<p>' + (res.data && res.data.message ? res.data.message : 'Error') + '</p>');
             }
         }).fail(function () {
-            modal.find('.modal-body').html('<p><?php _e('Ajax error.', 'woo-fashnai-preview'); ?></p>');
+            modal.find('.modal-body').html('<p><?php _e('Ajax error.', 'woo-fitroom-preview'); ?></p>');
         });
     });
 
@@ -582,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function () {
    </div>
 
    <p style="margin-top:2em;font-size:smaller;">
-       Try-On Tool is Free Software, licensed under the GNU GPL v2 — NO WARRANTY. 
+       Try-On Tool is Free Software, licensed under the GNU GPL v2” NO WARRANTY. 
        <a href="<?php echo plugin_dir_url( dirname( dirname( __FILE__ ) ) ); ?>COPYING.txt" target="_blank">View License</a>
    </p>
    

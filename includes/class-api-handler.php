@@ -21,19 +21,18 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 /**
- * WooFashnaiPreview_API_Handler
+ * WooFitroomPreview_API_Handler
  *
  * WordPress wrapper around the TryOnTool REST API.
- * Docs: https://docs.fashn.ai/fashn-api/endpoints
+ * Docs: handled via FITROOM_RELAY_ENDPOINT
  *
  * © 2025 Your Company — MIT / GPL-compatible
  */
 
-class WooFashnaiPreview_API_Handler {
+class WooFitroomPreview_API_Handler {
 
 	/* ─── CONSTANTS ────────────────────────────────────────────────── */
-	public const RUN_ENDPOINT    = 'https://api.fashn.ai/v1/run';          // POST
-	public const STATUS_ENDPOINT = 'https://api.fashn.ai/v1/status/';      // GET {id}
+	// Direct external endpoints removed – we use the relay constant
 
 	/**
 	 * Send a virtual-try-on request and poll until the output is ready.
@@ -53,9 +52,9 @@ class WooFashnaiPreview_API_Handler {
 			return new WP_Error( 'wp_uploads_error', $upload_dir['error'] );
 		}
 
-		$dest_path = $upload_dir['path'] . '/fashnai_' . time() . '_' . wp_basename( $user_image_path );
+		$dest_path = $upload_dir['path'] . '/fitroom_' . time() . '_' . wp_basename( $user_image_path );
 		if ( ! copy( $user_image_path, $dest_path ) ) {
-			return new WP_Error( 'file_copy_error', __( 'Could not copy image', 'woo-fashnai-preview' ) );
+			return new WP_Error( 'file_copy_error', __( 'Could not copy image', 'woo-fitroom-preview' ) );
 		}
 
 		/* 2.  Base-64 encode both images (SiteGround WAF fix) */
@@ -68,7 +67,7 @@ class WooFashnaiPreview_API_Handler {
 		$garment_b64      = 'data:image/jpeg;base64,' . base64_encode( $garment_img_data );
 
 		/* 3.  Send to RELAY  */
-		$license_key = get_option( 'woo_fashnai_license_key' );
+		$license_key = get_option( 'WOO_FITROOM_license_key' );
 		$client_site_url = home_url();
 
 		// --- >>> ADDED: Log the retrieved key and the JSON body <<< ---
@@ -85,7 +84,7 @@ class WooFashnaiPreview_API_Handler {
 		// --- >>> END ADDED LOGGING <<< ---
 
 		$response = wp_remote_post(
-			FASHNAI_RELAY_ENDPOINT, // Reverted Constant name
+			FITROOM_RELAY_ENDPOINT, // Reverted Constant name
 			array(
 				'method'  => 'POST',
 				'headers' => array( 'Content-Type' => 'application/json' ),
@@ -98,8 +97,8 @@ class WooFashnaiPreview_API_Handler {
 		if ( is_wp_error( $response ) ) {
 			// LOG THE WP_Error object before returning
 			error_log("TryOnTool Client Plugin: WP_Error contacting relay: " . $response->get_error_message() . ' | Data: ' . print_r($response->get_error_data(), true));
-			$error_message = __('Try-On Tool API Error: ', 'woo-fashnai-preview') . $response->get_error_message();
-			return new WP_Error('relay_wp_error', __('Error communicating with the license server.', 'woo-fashnai-preview'), $error_message);
+			$error_message = __('Try-On Tool API Error: ', 'woo-fitroom-preview') . $response->get_error_message();
+			return new WP_Error('relay_wp_error', __('Error communicating with the license server.', 'woo-fitroom-preview'), $error_message);
 		}
 
 		$code = wp_remote_retrieve_response_code( $response );
@@ -110,12 +109,12 @@ class WooFashnaiPreview_API_Handler {
 
 		// Check for successful generation (200 OK from relay)
 		if ( $code === 200 && ! empty( $body['image_url'] ) ) {
-			$success_message = __('Try On Tool API Success: ', 'woo-fashnai-preview') . $body['image_url'];
+			$success_message = __('Try On Tool API Success: ', 'woo-fitroom-preview') . $body['image_url'];
 			return array( 'image_url' => $body['image_url'] );
 		}
 
 		// Handle specific errors from the relay
-		$error_message = __( 'An unknown error occurred on the license server.', 'woo-fashnai-preview' );
+		$error_message = __( 'An unknown error occurred on the license server.', 'woo-fitroom-preview' );
 		$error_code = 'relay_unknown_error';
 
 		// Check if the response body itself contains a structured WP_Error from the relay's REST response
@@ -132,30 +131,30 @@ class WooFashnaiPreview_API_Handler {
 			case 'no_license_key':
 			case 'invalid_key':
 			case 'site_mismatch':
-				$error_message = __('License key validation failed. Please check your key in the plugin settings.', 'woo-fashnai-preview');
+				$error_message = __('License key validation failed. Please check your key in the plugin settings.', 'woo-fitroom-preview');
 				break;
 			case 'license_inactive':
 			case 'license_expired':
-				 $error_message = __('Your license is inactive or expired. Please renew your plan.', 'woo-fashnai-preview');
+				 $error_message = __('Your license is inactive or expired. Please renew your plan.', 'woo-fitroom-preview');
 				 break;
 			case 'no_credits':
-				$error_message = __('You have run out of preview credits. Please purchase more.', 'woo-fashnai-preview');
+				$error_message = __('You have run out of preview credits. Please purchase more.', 'woo-fitroom-preview');
 				break;
-			// Error codes from the relay regarding external API interaction (reverted to fashnai_...)
-			case 'fashnai_run_failed':
-			case 'fashnai_prediction_failed':
-			case 'fashnai_run_wp_error': 
-			case 'fashnai_status_wp_error': 
-			case 'fashnai_no_output': 
-				$error_message = __('The AI engine failed to process the images. Please try different images or contact support.', 'woo-fashnai-preview');
+			// Map to fitroom errors
+			case 'fitroom_create_failed':
+			case 'fitroom_failed':
+			case 'fitroom_create_error': 
+			case 'fitroom_status_error': 
+			case 'fitroom_no_output': 
+				$error_message = __('The AI engine failed to process the images. Please try different images or contact support.', 'woo-fitroom-preview');
 				break;
-			case 'fashnai_timeout':
-				 $error_message = __('The AI generation timed out. Please try again later.', 'woo-fashnai-preview');
+			case 'fitroom_timeout':
+				 $error_message = __('The AI generation timed out. Please try again later.', 'woo-fitroom-preview');
 				 break;
 			case 'missing_images': 
 			case 'missing_params': 
 			case 'auth_required': 
-				 $error_message = __('An internal error occurred processing the request. Missing required data.', 'woo-fashnai-preview');
+				 $error_message = __('An internal error occurred processing the request. Missing required data.', 'woo-fitroom-preview');
 					break;
 			// Add more specific mappings as needed
 		}
@@ -180,16 +179,16 @@ class WooFashnaiPreview_API_Handler {
 	private function get_simple_image_data( $file_path ) {
 		// Validate path
 		if ( ! file_exists( $file_path ) ) {
-			return new WP_Error( 'file_not_found', __( 'Model image file not found', 'woo-fashnai-preview' ) );
+			return new WP_Error( 'file_not_found', __( 'Model image file not found', 'woo-fitroom-preview' ) );
 		}
 
 		// Read binary
 		$image_data = file_get_contents( $file_path );
 		if ( $image_data === false ) {
-			return new WP_Error( 'file_read_error', __( 'Cannot read model image file', 'woo-fashnai-preview' ) );
+			return new WP_Error( 'file_read_error', __( 'Cannot read model image file', 'woo-fitroom-preview' ) );
 		}
 
-		// Ensure JPEG format (FashnAI prefers JPG)
+		// Ensure JPEG format (backend prefers JPG)
 		$image_type = @exif_imagetype( $file_path );
 		if ( $image_type !== IMAGETYPE_JPEG ) {
 			error_log( 'WooFashnai API: Converting non-JPEG model image to JPEG' );
@@ -208,6 +207,27 @@ class WooFashnaiPreview_API_Handler {
 						$src_img = false;
 					}
 					break;
+				case false:
+					// Formats like HEIC/HEIF/AVIF often report false here. Try Imagick, then generic decoder.
+					if ( class_exists( 'Imagick' ) ) {
+						try {
+							$imagick = new \Imagick( $file_path );
+							$imagick->setImageFormat( 'jpg' );
+							$blob = $imagick->getImageBlob();
+							$src_img = imagecreatefromstring( $blob );
+							$imagick->clear();
+							$imagick->destroy();
+						} catch ( \Exception $e ) {
+							$src_img = false;
+						}
+					}
+					if ( ! $src_img ) {
+						$raw = @file_get_contents( $file_path );
+						if ( $raw !== false ) {
+							$src_img = @imagecreatefromstring( $raw );
+						}
+					}
+					break;
 				default:
 					$src_img = false;
 					break;
@@ -215,7 +235,7 @@ class WooFashnaiPreview_API_Handler {
 
 			if ( $src_img ) {
 				$upload_dir = wp_upload_dir();
-				$temp_file  = $upload_dir['basedir'] . '/woo-fashnai-temp/' . uniqid( 'model_' ) . '.jpg';
+				$temp_file  = $upload_dir['basedir'] . '/woo-fitroom-temp/' . uniqid( 'model_' ) . '.jpg';
 				// Ensure temp dir exists
 				if ( ! file_exists( dirname( $temp_file ) ) ) {
 					wp_mkdir_p( dirname( $temp_file ) );
@@ -265,14 +285,14 @@ class WooFashnaiPreview_API_Handler {
 
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
-            return new WP_Error('remote_image_error', __('Cannot retrieve product image', 'woo-fashnai-preview'));
+            return new WP_Error('remote_image_error', __('Cannot retrieve product image', 'woo-fitroom-preview'));
         }
 
         $image_data = wp_remote_retrieve_body($response);
         
         // Convert to JPEG if needed
         $upload_dir = wp_upload_dir();
-        $temp_dir = $upload_dir['basedir'] . '/woo-fashnai-temp'; 
+        $temp_dir = $upload_dir['basedir'] . '/woo-fitroom-temp'; 
         $temp_file = $temp_dir . '/' . md5($url) . '.tmp';
         
         // Ensure temp dir exists
@@ -289,12 +309,12 @@ class WooFashnaiPreview_API_Handler {
          * Some hosting stacks (older GD, missing WEBP support, files served with
          *  a query-string, etc.) cause exif_imagetype() to return FALSE even
          *  though the data is a valid image.  To avoid sending an unsupported
-         *  format to the FashnAI back-end we fall back to imagecreatefromstring()
+         *  format to the back-end we fall back to imagecreatefromstring()
          *  when the type is undetectable.
          */
 
         if ($image_type !== IMAGETYPE_JPEG) {
-            error_log('WooFashnai API: Converting remote non-JPEG image (detected type ' . var_export($image_type, true) . ') to JPEG');
+            error_log('WooFitroom API: Converting remote non-JPEG image (detected type ' . var_export($image_type, true) . ') to JPEG');
 
             $src_img = false;
             switch ($image_type) {

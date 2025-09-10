@@ -23,7 +23,7 @@
 /**
  * Settings class for WooCommerce TryOnTool Preview
  */
-class WooFashnaiPreview_Settings {
+class WooFitroomPreview_Settings {
     /**
      * Initialize the class
      */
@@ -36,13 +36,13 @@ class WooFashnaiPreview_Settings {
         // Add settings page
         add_action('admin_menu', array($this, 'add_settings_page'));
         // Register AJAX handlers for license validation
-        add_action('wp_ajax_woo_fashnai_validate_license', array($this, 'ajax_validate_license_key'));
+        add_action('wp_ajax_woo_fitroom_validate_license', array($this, 'ajax_validate_license_key'));
         // FREE PLAN TOPUP - AJAX handler for marking free plan as used
-        add_action('wp_ajax_woo_fashnai_mark_free_plan_used', array($this, 'ajax_mark_free_plan_used'));
+        add_action('wp_ajax_WOO_FITROOM_mark_free_plan_used', array($this, 'ajax_mark_free_plan_used'));
         // FREE PLAN TOPUP - AJAX handler for resetting free plan status
-        add_action('wp_ajax_woo_fashnai_reset_free_plan', array($this, 'ajax_reset_free_plan'));
+        add_action('wp_ajax_WOO_FITROOM_reset_free_plan', array($this, 'ajax_reset_free_plan'));
         // Consent records fetch (admin)
-        add_action('wp_ajax_woo_fashnai_get_consents', array($this, 'ajax_get_consents'));
+        add_action('wp_ajax_WOO_FITROOM_get_consents', array($this, 'ajax_get_consents'));
         
 
         
@@ -54,8 +54,8 @@ class WooFashnaiPreview_Settings {
      */
     public function register_settings() {
         register_setting(
-            'woo_fashnai_preview_options',
-            'woo_fashnai_preview_enabled',
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_preview_enabled',
             array(
                 'type' => 'boolean',
                 'default' => false,
@@ -65,8 +65,8 @@ class WooFashnaiPreview_Settings {
 
         // Add License Key Setting
         register_setting(
-            'woo_fashnai_preview_options',
-            'woo_fashnai_license_key',
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_license_key',
             array(
                 'type' => 'string',
                 'sanitize_callback' => 'sanitize_text_field',
@@ -74,11 +74,11 @@ class WooFashnaiPreview_Settings {
             )
         );
 
-        // API key option removed – key is managed server-side on relay
+        // API key option removed â€“ key is managed server-side on relay
 
         register_setting(
-            'woo_fashnai_preview_options',
-            'woo_fashnai_daily_credits', // Keep if you want a *client-side* visual limit (doesn't enforce server-side)
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_daily_credits', // Keep if you want a *client-side* visual limit (doesn't enforce server-side)
             array(
                 'type'              => 'integer',
                 'default'           => 0,
@@ -87,8 +87,8 @@ class WooFashnaiPreview_Settings {
         );
          // Keep other settings like logged_in_only, allowed_roles etc. if needed
         register_setting(
-            'woo_fashnai_preview_options',
-            'woo_fashnai_logged_in_only',
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_logged_in_only',
             array(
                 'type'              => 'boolean',
                 'default'           => false,
@@ -97,8 +97,8 @@ class WooFashnaiPreview_Settings {
         );
         // ... other existing settings registrations ...
         register_setting(
-            'woo_fashnai_preview_options',
-            'woo_fashnai_allowed_roles',
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_allowed_roles',
             array(
                 'type'              => 'array',
                 'sanitize_callback' => array( $this, 'sanitize_array_of_strings' ),
@@ -107,8 +107,8 @@ class WooFashnaiPreview_Settings {
         );
 
         register_setting(
-            'woo_fashnai_preview_options',
-            'woo_fashnai_allowed_user_ids',
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_allowed_user_ids',
             array(
                 'type'              => 'string', // comma-separated list stored as string
                 'sanitize_callback' => 'sanitize_text_field',
@@ -117,8 +117,8 @@ class WooFashnaiPreview_Settings {
         );
 
         register_setting(
-            'woo_fashnai_preview_options',
-            'woo_fashnai_required_user_tag',
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_required_user_tag',
             array(
                 'type'              => 'string',
                 'sanitize_callback' => 'sanitize_text_field',
@@ -127,8 +127,8 @@ class WooFashnaiPreview_Settings {
         );
 
         register_setting(
-            'woo_fashnai_preview_options',
-            'woo_fashnai_require_extra_consents',
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_require_extra_consents',
             array(
                 'type' => 'boolean',
                 'sanitize_callback' => array($this, 'sanitize_consent_setting'),
@@ -138,8 +138,8 @@ class WooFashnaiPreview_Settings {
 
         // FREE PLAN TOPUP - Track if free plan has been used
         register_setting(
-            'woo_fashnai_preview_options',
-            'woo_fashnai_free_plan_used',
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_free_plan_used',
             array(
                 'type' => 'boolean',
                 'sanitize_callback' => function($val) { return $val ? 1 : 0; },
@@ -154,10 +154,10 @@ class WooFashnaiPreview_Settings {
     public function add_settings_page() {
         add_submenu_page(
             'woocommerce',
-            __('Try-On Tool Preview Settings', 'woo-fashnai-preview'),
-            __('Try-On Tool Preview', 'woo-fashnai-preview'),
+            __('Try-On Tool Preview Settings', 'woo-fitroom-preview'),
+            __('Try-On Tool Preview', 'woo-fitroom-preview'),
             'manage_options',
-            'woo-fashnai-preview',
+            'woo-fitroom-preview',
             array($this, 'render_settings_page')
         );
     }
@@ -166,18 +166,18 @@ class WooFashnaiPreview_Settings {
      * Render the settings page
      */
     public function render_settings_page() {
-        require_once WOO_FASHNAI_PREVIEW_PLUGIN_DIR . 'templates/admin/settings-page.php';
+        require_once WOO_FITROOM_PREVIEW_PLUGIN_DIR . 'templates/admin/settings-page.php';
     }
 
     // Function to call license validation endpoint
     public function ajax_validate_license_key() {
-        check_ajax_referer( 'fashnai_validate_license_nonce', 'nonce' );
+        check_ajax_referer( 'fitroom_validate_license_nonce', 'nonce' );
 
         $license_key = isset($_POST['license_key']) ? sanitize_text_field($_POST['license_key']) : '';
         $site_url = home_url(); // Get current site URL
 
         if ( empty($license_key) ) {
-            wp_send_json_error( array( 'message' => __('Please enter a license key.', 'woo-fashnai-preview') ) );
+            wp_send_json_error( array( 'message' => __('Please enter a license key.', 'woo-fitroom-preview') ) );
         }
 
         $request_args = array(
@@ -190,10 +190,10 @@ class WooFashnaiPreview_Settings {
             'timeout' => 30,
         );
 
-        $response = wp_remote_post( FASHNAI_VALIDATE_ENDPOINT, $request_args );
+        $response = wp_remote_post( defined('FITROOM_VALIDATE_ENDPOINT') ? FITROOM_VALIDATE_ENDPOINT : FITROOM_VALIDATE_ENDPOINT, $request_args );
 
         if ( is_wp_error( $response ) ) {
-            wp_send_json_error( array( 'message' => __('Error contacting validation server: ', 'woo-fashnai-preview') . $response->get_error_message() ) );
+            wp_send_json_error( array( 'message' => __('Error contacting validation server: ', 'woo-fitroom-preview') . $response->get_error_message() ) );
         }
 
         $response_code = wp_remote_retrieve_response_code( $response );
@@ -201,24 +201,24 @@ class WooFashnaiPreview_Settings {
 
         if ( $response_code === 200 && isset($response_body['success']) && $response_body['success'] ) {
              // Optionally store validation status/info
-             update_option('woo_fashnai_license_status', 'valid');
-             update_option('woo_fashnai_license_expires', isset($response_body['expires']) ? $response_body['expires'] : '');
-             update_option('woo_fashnai_license_credits', isset($response_body['credits']) ? $response_body['credits'] : '');
-             update_option('woo_fashnai_plan_product_id', isset($response_body['plan_product_id']) ? $response_body['plan_product_id'] : '');
+             update_option('WOO_FITROOM_license_status', 'valid');
+             update_option('WOO_FITROOM_license_expires', isset($response_body['expires']) ? $response_body['expires'] : '');
+             update_option('WOO_FITROOM_license_credits', isset($response_body['credits']) ? $response_body['credits'] : '');
+             update_option('WOO_FITROOM_plan_product_id', isset($response_body['plan_product_id']) ? $response_body['plan_product_id'] : '');
 
              wp_send_json_success( array(
-                 'message' => __('License key is valid and active!', 'woo-fashnai-preview'),
+                 'message' => __('License key is valid and active!', 'woo-fitroom-preview'),
                  'credits' => isset($response_body['credits']) ? $response_body['credits'] : 'N/A',
                  'expires' => isset($response_body['expires']) ? $response_body['expires'] : 'N/A',
                  'plan_product_id' => isset($response_body['plan_product_id']) ? $response_body['plan_product_id'] : null,
              ) );
         } else {
-             update_option('woo_fashnai_license_status', 'invalid');
-             update_option('woo_fashnai_license_expires', '');
-             update_option('woo_fashnai_license_credits', '');
-             update_option('woo_fashnai_plan_product_id', '');
+             update_option('WOO_FITROOM_license_status', 'invalid');
+             update_option('WOO_FITROOM_license_expires', '');
+             update_option('WOO_FITROOM_license_credits', '');
+             update_option('WOO_FITROOM_plan_product_id', '');
 
-             $error_message = __('License validation failed.', 'woo-fashnai-preview');
+             $error_message = __('License validation failed.', 'woo-fitroom-preview');
              if ( isset($response_body['message']) ) {
                  $error_message = $response_body['message'];
              } elseif( isset($response_body['code']) ) { // Use code from WP_Error response
@@ -230,7 +230,7 @@ class WooFashnaiPreview_Settings {
 
     public function verify_settings() {
         error_log('WooTryOnTool Plugin Settings:');
-        error_log('Enabled: ' . (get_option('woo_fashnai_preview_enabled') ? 'Yes' : 'No'));
+        error_log('Enabled: ' . (get_option('WOO_FITROOM_preview_enabled') ? 'Yes' : 'No'));
     }
 
     public function sanitize_array_of_strings( $input ) {
@@ -263,21 +263,21 @@ class WooFashnaiPreview_Settings {
      */
     public function set_consent_default_once() {
         // Check if we've already set the default value
-        if (get_option('woo_fashnai_consent_default_initialized') === true) {
+        if (get_option('WOO_FITROOM_consent_default_initialized') === true) {
             return; // Already initialized, don't run again
         }
         
         // Get the current value of the consent option
-        $current_value = get_option('woo_fashnai_require_extra_consents');
+        $current_value = get_option('WOO_FITROOM_require_extra_consents');
         
         // Only set default if the option doesn't exist at all
         if ($current_value === false) {
-            update_option('woo_fashnai_require_extra_consents', 1);
+            update_option('WOO_FITROOM_require_extra_consents', 1);
             error_log('Try-On Tool: Consent setting initialized to checked by default.');
         }
         
         // Mark that we've initialized the default value
-        update_option('woo_fashnai_consent_default_initialized', true);
+        update_option('WOO_FITROOM_consent_default_initialized', true);
     }
     
 
@@ -286,13 +286,13 @@ class WooFashnaiPreview_Settings {
      * AJAX: Return consent records for admin table
      */
     public function ajax_get_consents() {
-        check_ajax_referer( 'fashnai_get_consents', 'nonce' );
+        check_ajax_referer( 'FITROOM_get_consents', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'woo-fashnai-preview' ) ), 403 );
+            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'woo-fitroom-preview' ) ), 403 );
         }
 
-        $consents = get_option( 'woo_fashnai_consents', array() );
+        $consents = get_option( 'WOO_FITROOM_consents', array() );
 
         // Return as numerically-indexed array for easier JS loop
         $out = array_values( $consents );
@@ -303,18 +303,18 @@ class WooFashnaiPreview_Settings {
      * FREE PLAN TOPUP - AJAX: Mark free plan as used
      */
     public function ajax_mark_free_plan_used() {
-        check_ajax_referer( 'fashnai_mark_free_plan_used', 'nonce' );
+        check_ajax_referer( 'FITROOM_mark_free_plan_used', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'woo-fashnai-preview' ) ), 403 );
+            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'woo-fitroom-preview' ) ), 403 );
         }
 
         // FREE PLAN TOPUP - Mark free plan as used
-        update_option( 'woo_fashnai_free_plan_used', true );
+        update_option( 'WOO_FITROOM_free_plan_used', true );
 
         wp_send_json_success( array( 
-            'message' => __( 'Free plan marked as used.', 'woo-fashnai-preview' ),
-            'redirect_url' => 'https://tryontool.com/checkout/?add-to-cart=' . (defined('FASHNAI_PLAN_FREE_PRODUCT_ID') ? FASHNAI_PLAN_FREE_PRODUCT_ID : 5961)
+            'message' => __( 'Free plan marked as used.', 'woo-fitroom-preview' ),
+            'redirect_url' => 'https://tryontool.com/checkout/?add-to-cart=' . (defined('FITROOM_PLAN_FREE_PRODUCT_ID') ? FITROOM_PLAN_FREE_PRODUCT_ID : 5961)
         ) );
     }
 
@@ -322,14 +322,15 @@ class WooFashnaiPreview_Settings {
      * FREE PLAN TOPUP - AJAX: Reset free plan status
      */
     public function ajax_reset_free_plan() {
-        check_ajax_referer( 'fashnai_reset_free_plan', 'nonce' );
+        check_ajax_referer( 'FITROOM_reset_free_plan', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'woo-fashnai-preview' ) ), 403 );
+            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'woo-fitroom-preview' ) ), 403 );
         }
 
         // FREE PLAN TOPUP - Reset free plan status
-        delete_option( 'woo_fashnai_free_plan_used' );
-        wp_send_json_success( array( 'message' => __( 'Free plan status reset.', 'woo-fashnai-preview' ) ) );
+        delete_option( 'WOO_FITROOM_free_plan_used' );
+        wp_send_json_success( array( 'message' => __( 'Free plan status reset.', 'woo-fitroom-preview' ) ) );
     }
 }
+

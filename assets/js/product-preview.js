@@ -36,10 +36,10 @@
         let imgElement = null;
 
         console.log('WooTryOnTool Preview: JavaScript initialized');
-        console.log('WooTryOnTool Preview Buttons found:', $('.woo-fashnai-preview-button').length);
+        console.log('WooTryOnTool Preview Buttons found:', $('.woo-fitroom-preview-button').length);
         
         // Handle preview button click
-        $('.woo-fashnai-preview-button').on('click', function(e) {
+        $('.woo-fitroom-preview-button').on('click', function(e) {
             console.log('WooTryOnTool Preview: Button clicked');
             e.preventDefault();
             
@@ -51,22 +51,85 @@
             $('#product_id').val(productId);
             $('#product_image_url').val(productImage);
             
-            $('#woo-fashnai-preview-modal').show();
+            $('#woo-fitroom-preview-modal').addClass('is-open').show();
+
+            // Try to detect theme primary color and apply to modal as CSS var --tryon-primary
+            try {
+                // 1st: Try global theme CSS variable if exposed by WP theme.json
+                let primary = getComputedStyle(document.body).getPropertyValue('--wp--preset--color--primary').trim();
+
+                // 2nd: Try secondary token
+                if(!primary){
+                    primary = getComputedStyle(document.body).getPropertyValue('--wp--preset--color--secondary').trim();
+                }
+
+                // 3rd: Fallback to link colour detected from a dummy anchor
+                if(!primary){
+                    const testEl = document.createElement('a');
+                    testEl.href = '#';
+                    document.body.appendChild(testEl);
+                    primary = getComputedStyle(testEl).color;
+                    document.body.removeChild(testEl);
+                }
+                // 4th: hard default if everything else fails
+                if (!primary || !/rgb|#/.test(primary)) {
+                    primary = '#F4BD7A';
+                }
+                const modalRoot = document.getElementById('woo-fitroom-preview-modal');
+                if (modalRoot && primary) {
+                    // Only override if not already customised
+                    const existing = modalRoot.style.getPropertyValue('--tryon-primary');
+                    if (!existing) {
+                        modalRoot.style.setProperty('--tryon-primary', primary.trim());
+                    }
+                }
+            } catch (_) {
+                const modalRoot = document.getElementById('woo-fitroom-preview-modal');
+                if (modalRoot) { modalRoot.style.setProperty('--tryon-primary', '#FB5607'); }
+            }
             
-            /* Auto-fetch previously uploaded images and pre-select the first one */
-            if (wooFashnaiPreview.user_id && wooFashnaiPreview.user_id !== 0) {
+            // Hide consent blocks up-front if the server says they are not needed for this user
+            const modal = document.getElementById('woo-fitroom-preview-modal');
+            if (modal) {
+                const needConsent = modal.getAttribute('data-require-consent') === '1';
+                const showExtra = modal.getAttribute('data-show-extra-consents') === '1';
+                if (!needConsent) { $('#user_consent').closest('.form-field').hide(); }
+                if (!showExtra) { $('#terms_consent, #refund_consent').closest('.form-field').hide(); }
+            }
+            
+            /* Auto-fetch previously uploaded images and render inline strip */
+            if (WooFitroomPreview.user_id && WooFitroomPreview.user_id !== 0) {
                 $.ajax({
-                    url: wooFashnaiPreview.ajaxurl,
+                    url: WooFitroomPreview.ajaxurl,
                     type: 'POST',
                     data: {
                         action: 'get_user_uploaded_images',
-                        user_id: wooFashnaiPreview.user_id,
-                        nonce: wooFashnaiPreview.nonce
+                        user_id: WooFitroomPreview.user_id,
+                        nonce: WooFitroomPreview.nonce
                     },
                     success: function(res){
                         if(res.success && res.data.images.length){
-                            // Pre-select the newest/first image
-                            $('#saved_user_image_url').val(res.data.images[0]);
+                            const list = $('#my_uploads_list');
+                            const strip = $('#my_uploads_strip');
+                            strip.show();
+                            list.empty();
+                            const maxThumbs = 5;
+                            const images = res.data.images;
+                            const visible = images.slice(0, maxThumbs);
+                            visible.forEach((u, idx) => {
+                                const isLastAndMore = (idx === maxThumbs - 1) && (images.length > maxThumbs);
+                                if (isLastAndMore) {
+                                    list.append(`<div class="thumb more" id="my_uploads_more"><span>${__('View More','woo-fitroom-preview')}</span></div>`);
+                                } else {
+                                    const prox = getProxyImageUrl(u);
+                                    list.append(`<div class="thumb" data-url="${u}"><img src="${prox}" data-url="${u}" alt="uploaded"/></div>`);
+                                }
+                            });
+                            // Pre-select first image
+                            $('#saved_user_image_url').val(images[0]);
+                            list.find('.thumb').first().addClass('selected');
+                        } else {
+                            $('#my_uploads_strip').hide();
                         }
                     }
                 });
@@ -89,31 +152,73 @@
                 imgElement.onerror = function() {
                     console.error('Failed to load product image');
                     imgElement.style.display = 'none';
-                    $('.product-image-preview').append('<p class="error">' + __( 'Failed to load product image', 'woo-fashnai-preview' ) + '</p>');
+                    $('.product-image-preview').append('<p class="error">' + __( 'Failed to load product image', 'woo-fitroom-preview' ) + '</p>');
                 };
             } else {
                 console.error('Image element #preview-product-image or product image URL not found');
                 if (imgElement) imgElement.style.display = 'none';
                  $('.product-image-preview .error').remove();
-                 $('.product-image-preview').append('<p class="error">' + __( 'No product image available', 'woo-fashnai-preview' ) + '</p>');
+                 $('.product-image-preview').append('<p class="error">' + __( 'No product image available', 'woo-fitroom-preview' ) + '</p>');
             }
         });
 
         // Handle modal close
-        $('.woo-fashnai-preview-modal .close').on('click', function() {
-            $('#woo-fashnai-preview-modal').hide();
+        $('.woo-fitroom-preview-modal .close').on('click', function() {
+            $('#woo-fitroom-preview-modal').removeClass('is-open').hide();
             $('.product-image-preview .error').remove(); 
             // $('#preview-product-image').removeClass('image-error').show();
         });
 
         // Close modal when clicking outside
         $(window).on('click', function(e) {
-            if ($(e.target).is('.woo-fashnai-preview-modal')) {
-                $('.woo-fashnai-preview-modal').hide();
+            if ($(e.target).is('.woo-fitroom-preview-modal')) {
+                $('.woo-fitroom-preview-modal').removeClass('is-open').hide();
             }
         });
 
-        // Handle image click to select and update the input field
+        // Helper: open uploaded images modal (used by both inline "More" and legacy button)
+        function openUploadedImagesModal(){
+            $.ajax({
+                url: WooFitroomPreview.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'get_user_uploaded_images',
+                    user_id: WooFitroomPreview.user_id,
+                    nonce: WooFitroomPreview.nonce
+                },
+                success: function(res){
+                    if (res.success && res.data.images.length){
+                        let html = '<div class="uploaded-images-grid">';
+                        res.data.images.forEach(u=>{ html += `<div class="img-item"><img src="${getProxyImageUrl(u)}"/></div>`; });
+                        html += '</div>';
+                        let modal = document.getElementById('uploaded-images-modal');
+                        if(!modal){
+                            $('body').append(`<div id="uploaded-images-modal" class="woo-fitroom-preview-modal" style="display:none;"><div class="modal-content"><span class="close">&times;</span><h3 style="margin-bottom:20px !important;">My Uploads</h3><div class="images-wrap"></div></div></div>`);
+                            modal = document.getElementById('uploaded-images-modal');
+                            $(modal).on('click','.close',()=>$(modal).removeClass('is-open').hide());
+                            $(window).on('click',evt=>{ if(evt.target===modal){ $(modal).removeClass('is-open').hide(); }});
+                        }
+                        $(modal).find('.images-wrap').html(html);
+                        $(modal).classList ? modal.classList.add('is-open') : $(modal).addClass('is-open');
+                        $(modal).show();
+                        $(modal).off('click', '.img-item img').on('click','.img-item img',function(){
+                            const selectedImageUrl = $(this).data('url') || $(this).attr('src');
+                            $('#saved_user_image_url').val(selectedImageUrl);
+                            $('#user_image').val('').prop('required', false);
+                            $('#selected-photo-name').text( __( 'Selected photo:', 'woo-fitroom-preview' ) + ' ' + selectedImageUrl.split('/').pop() );
+                            // Close modal completely
+                            $(modal).removeClass('is-open').hide();
+                            alert( __( 'Photo selected! Click Generate Preview.', 'woo-fitroom-preview' ) );
+                        });
+                    } else {
+                        alert( __( 'No saved images.', 'woo-fitroom-preview' ) );
+                    }
+                },
+                error: () => alert( __( 'Error fetching images', 'woo-fitroom-preview' ) )
+            });
+        }
+
+        // Handle image click to select and update the input field (gallery modal)
         $(document).on('click', '.img-item img', function() {
             // Get the URL of the clicked image
             const selectedImageUrl = $(this).attr('src');
@@ -123,35 +228,81 @@
             // Clear file input and remove required since we are using saved image
             $('#user_image').val('').prop('required', false);
             // Display name of selected image for user feedback
-            $('#selected-photo-name').text( __( 'Selected photo:', 'woo-fashnai-preview' ) + ' ' + selectedImageUrl.split('/').pop() );
+            $('#selected-photo-name').text( __( 'Selected photo:', 'woo-fitroom-preview' ) + ' ' + selectedImageUrl.split('/').pop() );
             console.log('Selected Image URL:', selectedImageUrl);
             console.log('Input field value set to:', $('#saved_user_image_url').val());
             
             // Provide feedback to the user (translated)
-            alert( __( 'Photo selected! Click Generate Preview.', 'woo-fashnai-preview' ) );
-            
-            // Optionally, close the modal after selection
-            // $('#uploaded-images-modal').hide();
+            alert( __( 'Photo selected! Click Generate Preview.', 'woo-fitroom-preview' ) );
+
+            // Close the gallery modal
+            $('#uploaded-images-modal').removeClass('is-open').hide();
+        });
+
+        // Handle click on inline strip thumbnails
+        $(document).on('click', '#my_uploads_list .thumb:not(.more)', function(){
+            const originalUrl = $(this).data('url');
+            $('#saved_user_image_url').val(originalUrl);
+            $('#user_image').val('').prop('required', false);
+            $('#selected-photo-name').text( __( 'Selected photo:', 'woo-fitroom-preview' ) + ' ' + originalUrl.split('/').pop() );
+            $('#my_uploads_list .thumb').removeClass('selected');
+            $(this).addClass('selected');
+        });
+
+        // Handle click on the "More" tile -> open existing modal loader
+        $(document).on('click', '#my_uploads_more', function(){
+            openUploadedImagesModal();
         });
 
         // Handle form submission
-        $('#woo-fashnai-preview-form').on('submit', function(e) {
+        $('#woo-fitroom-preview-form').on('submit', function(e) {
             e.preventDefault();
             
-            // Hide previous results and errors
+            // Determine consent requirements from modal attributes
+            const modal = document.getElementById('woo-fitroom-preview-modal');
+            const needConsent = modal && modal.getAttribute('data-require-consent') === '1';
+            const showExtra = modal && modal.getAttribute('data-show-extra-consents') === '1';
+            
+            // Client-side consent validation (prevents generic server error)
+            if (needConsent && !$('#user_consent').prop('checked')) {
+                $('.preview-error').show().find('.error-message').text(__('Please provide consent before generating a preview.', 'woo-fitroom-preview'));
+                $('#user_consent').closest('.form-field').show();
+                return;
+            }
+            if (showExtra) {
+                const hasTerms = $('#terms_consent').length ? $('#terms_consent').prop('checked') : true;
+                const hasRefund = $('#refund_consent').length ? $('#refund_consent').prop('checked') : true;
+                if (!hasTerms || !hasRefund) {
+                    $('.preview-error').show().find('.error-message').text(__('Please agree to the Terms/Privacy and Refund Policy.', 'woo-fitroom-preview'));
+                    $('#terms_consent, #refund_consent').each(function(){ $(this).closest('.form-field').show(); });
+                    return;
+                }
+            }
+            
+            // Hide previous results and errors, and hide the upload UI while generating
             $('.preview-result').hide();
             $('.preview-error').hide();
+            // hide the initial content area (uploads strip + dropzone + button)
+            $('#my_uploads_strip').hide();
+            $('#user_image_dropzone').closest('.form-field').hide();
+            $(this).closest('.form-submit').hide();
+            // Hide all consent blocks once validation passes for the first submission
+            $('#user_consent').closest('.form-field').hide();
+            $('#terms_consent, #refund_consent').each(function(){ $(this).closest('.form-field').hide(); });
+            // Ensure inputs won't block subsequent submissions
+            $('#user_consent').prop('required', false);
+            $('#terms_consent, #refund_consent').prop('required', false);
             
             // Show loading indicator
             if (!$('.loading-indicator').length) {
-                $('.preview-error').after('<div class="loading-indicator"><p>' + __( 'Generating image… This may take up to 60 seconds.', 'woo-fashnai-preview' ) + '</p><div class="spinner"></div></div>');
+                $('.preview-error').after('<div class="loading-indicator"><p>' + __( 'Generating image… This may take up to 60 seconds.', 'woo-fitroom-preview' ) + '</p><div class="spinner"></div></div>');
             }
             $('.loading-indicator').show();
             
             // Prepare form data
             const formData = new FormData(this);
-            formData.append('action', 'woo_fashnai_generate_preview');
-            formData.append('nonce', wooFashnaiPreview.nonce);
+            formData.append('action', 'woo_fitroom_generate_preview');
+            formData.append('nonce', WooFitroomPreview.nonce);
             
             // Add the selected image URL to the form data
             const selectedImageUrl = $('#saved_user_image_url').val();
@@ -159,21 +310,31 @@
                 // Ensure the server receives the parameter name it expects
                 formData.append('saved_user_image_url', selectedImageUrl);
             }
+            // Ensure consent fields are explicitly sent on first run
+            if ($('#user_consent').length) {
+                formData.append('user_consent', $('#user_consent').is(':checked') ? '1' : '');
+            }
+            if ($('#terms_consent').length) {
+                formData.append('terms_consent', $('#terms_consent').is(':checked') ? '1' : '');
+            }
+            if ($('#refund_consent').length) {
+                formData.append('refund_consent', $('#refund_consent').is(':checked') ? '1' : '');
+            }
             
             // Disable the submit button and change its text
             const submitButton = $(this).find('button[type="submit"]');
-            submitButton.prop('disabled', true).text(wooFashnaiPreview.i18n.processing);
+            submitButton.prop('disabled', true).text(WooFitroomPreview.i18n.processing);
             
             // Send AJAX request
             $.ajax({
-                url: wooFashnaiPreview.ajaxurl,
+                url: WooFitroomPreview.ajaxurl,
                 type: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-WP-Nonce': wooFashnaiPreview.nonce
+                    'X-WP-Nonce': WooFitroomPreview.nonce
                 },
                 success: function(response) {
                     console.log('API Response:', response);
@@ -183,9 +344,43 @@
                             img.onload = function() {
                                 console.log('Generated image loaded successfully');
                                 $('.preview-image').html(`<img src="${response.data.image_url}" alt="AI Preview">`);
+                                // If server saved the newly uploaded user photo, prepend it to the inline strip immediately
+                                if (response.data && response.data.user_image_saved_url) {
+                                    const u = response.data.user_image_saved_url;
+                                    const prox = getProxyImageUrl(u);
+                                    const list = $('#my_uploads_list');
+                                    if (list.length) {
+                                        // Prepend and trim grid to 5 tiles (keeping "More" at the end if exists)
+                                        list.prepend(`<div class="thumb" data-url="${u}"><img src="${prox}" alt="uploaded"/></div>`);
+                                        // Remove any surplus thumbnails before the "more" tile
+                                        const thumbs = list.find('.thumb:not(.more)');
+                                        if (thumbs.length > 5) {
+                                            thumbs.last().remove();
+                                        }
+                                        // Ensure strip is visible for next regenerate session
+                                        $('#my_uploads_strip').show();
+                                    }
+                                }
                                 $('.preview-result').show();
+                                // hide the top UI while preview is visible
+                                $('#my_uploads_strip').hide();
+                                $('#user_image_dropzone').closest('.form-field').hide();
+                                $('#woo-fitroom-preview-form .form-submit').hide();
+                                // Mark consents as completed for this session and future interactions
+                                const modalEl = document.getElementById('woo-fitroom-preview-modal');
+                                if (modalEl) {
+                                    modalEl.setAttribute('data-require-consent', '0');
+                                    modalEl.setAttribute('data-show-extra-consents', '0');
+                                    modalEl.classList.add('preview-mode');
+                                }
+                                // Permanently hide all consent checkboxes after first success
+                                $('#user_consent').closest('.form-field').hide();
+                                $('#terms_consent, #refund_consent').each(function(){
+                                    $(this).closest('.form-field').hide();
+                                });
+                                $('#user_consent').prop('required', false);
+                                $('#terms_consent, #refund_consent').prop('required', false);
                                 $('.preview-error').hide();
-                                
                                 $('.download-preview').attr('data-url', response.data.image_url);
                             };
                             img.onerror = function() {
@@ -193,20 +388,36 @@
                                 $('.preview-error')
                                     .show()
                                     .find('.error-message')
-                                    .text('Generated image could not be loaded. Please try again.');
+                                    .text(__('Generated image could not be loaded. Please try again.', 'woo-fitroom-preview'));
                             };
-                            img.src = response.data.image_url + '?t=' + new Date().getTime();
+                            (function(){
+                                var outUrl = response.data.image_url || '';
+                                // Only cache-bust same-origin (local/proxy) URLs to avoid breaking signed external URLs
+                                try {
+                                    var u = new URL(outUrl, window.location.origin);
+                                    var isLocal = (u.origin === window.location.origin);
+                                    if (isLocal) {
+                                        outUrl = outUrl + (outUrl.indexOf('?') > -1 ? '&' : '?') + 't=' + Date.now();
+                                    }
+                                } catch(e) {
+                                    // Fallback for relative-only strings
+                                    if (outUrl.indexOf('/') === 0) {
+                                        outUrl = outUrl + (outUrl.indexOf('?') > -1 ? '&' : '?') + 't=' + Date.now();
+                                    }
+                                }
+                                img.src = outUrl;
+                            })();
                             console.log('Attempting to load image from:', img.src);
                         } else {
                             console.error('Success response, but image_url missing:', response);
                             $('.preview-error')
                                 .show()
                                 .find('.error-message')
-                                .text(response.data.message || 'AI preview generated, but the result could not be retrieved.');
+                                .text(response.data && response.data.message ? response.data.message : __('AI preview generated, but the result could not be retrieved.', 'woo-fitroom-preview'));
                         }
                     } else {
                         console.error('API Error Response:', response);
-                        let errorMessage = wooFashnaiPreview.i18n.error;
+                        let errorMessage = WooFitroomPreview.i18n.error;
                         if (response.data && response.data.message) {
                             errorMessage = response.data.message;
                         }
@@ -218,7 +429,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('AJAX Error:', {xhr, status, error});
-                    let errorText = wooFashnaiPreview.i18n.error + ': ' + error;
+                    let errorText = WooFitroomPreview.i18n.error + ': ' + error;
                     if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
                         errorText = xhr.responseJSON.data.message;
                     }
@@ -228,7 +439,7 @@
                         .text(errorText);
                 },
                 complete: function() {
-                    submitButton.prop('disabled', false).text(wooFashnaiPreview.i18n.success);
+                    submitButton.prop('disabled', false).text(WooFitroomPreview.i18n.success);
                     $('.loading-indicator').hide();
                 }
             });
@@ -263,22 +474,71 @@
             }
         });
 
+        // Handle share button click
+        $(document).on('click', '.share-preview', function() {
+            const imageUrl = $('.download-preview').data('url');
+            if (!imageUrl) { return; }
+
+            const shareTitle = __('My Try-On Tool preview', 'woo-fitroom-preview');
+            const shareText  = __('Check out my virtual try-on preview!', 'woo-fitroom-preview');
+
+            // Prefer the Web Share API (with files if supported), otherwise fall back to platform URLs
+            if (navigator.share) {
+                // Try link share first (most platforms block direct file shares from blobs)
+                navigator.share({ title: shareTitle, text: shareText, url: imageUrl }).catch(()=>{});
+                return;
+            }
+
+            // Fallback panel: open a simple chooser with anchors
+            const encUrl  = encodeURIComponent(imageUrl);
+            const encText = encodeURIComponent(shareText);
+            const links = [
+                { name: 'WhatsApp', href: 'https://api.whatsapp.com/send?text=' + encText + '%20' + encUrl },
+                { name: 'Twitter',  href: 'https://twitter.com/intent/tweet?text=' + encText + '&url=' + encUrl },
+                { name: 'Facebook', href: 'https://www.facebook.com/sharer/sharer.php?u=' + encUrl },
+                { name: 'LinkedIn', href: 'https://www.linkedin.com/sharing/share-offsite/?url=' + encUrl },
+                // Instagram and TikTok do not support direct web URL shares; prompt user instead
+            ];
+
+            // Open the first in a new tab to keep UX minimal; advanced UI can be added later
+            window.open(links[0].href, '_blank');
+        });
+
+        // Regenerate: hide preview and show the initial upload UI again
+        $(document).on('click', '.regenerate-preview', function(){
+            $('.preview-result').hide();
+            // Reset selected file/state but keep saved user image selection
+            $('#user_image').val('');
+            $('#woo-fitroom-preview-form .form-submit').show();
+            $('#user_image_dropzone').closest('.form-field').show();
+            if (WooFitroomPreview.user_id && WooFitroomPreview.user_id !== 0) {
+                $('#my_uploads_strip').show();
+            }
+            // Do NOT show consents again after first completion (per requirement)
+            $('#user_consent').closest('.form-field').hide();
+            $('#terms_consent, #refund_consent').each(function(){
+                $(this).closest('.form-field').hide();
+            });
+            const modalEl2 = document.getElementById('woo-fitroom-preview-modal');
+            if (modalEl2) { modalEl2.classList.remove('preview-mode'); }
+        });
+
         // Handle save to account button click
         $(document).on('click', '.save-preview', function() {
             const imageUrl = $('.download-preview').data('url');
             if (!imageUrl) return;
 
             const data = {
-                action: 'woo_fashnai_save_preview', // Reverted action
-                nonce: wooFashnaiPreview.nonce,
+                action: 'woo_fitroom_save_preview', // Reverted action
+                nonce: WooFitroomPreview.nonce,
                 image_url: imageUrl,
                 product_id: $('#product_id').val()
             };
 
             const saveButton = $(this);
-            saveButton.text( __( 'Saving…', 'woo-fashnai-preview' ) ).prop('disabled', true);
+            saveButton.text( __( 'Saving…', 'woo-fitroom-preview' ) ).prop('disabled', true);
             
-            $.post(wooFashnaiPreview.ajaxurl, data, function(response) {
+            $.post(WooFitroomPreview.ajaxurl, data, function(response) {
                 if (response.success) {
                     alert(response.data.message || 'Preview saved successfully!');
                 } else {
@@ -292,7 +552,7 @@
         });
 
         // Add click handler to inspect button data
-        $('.woo-fashnai-preview-button').on('click', function() {
+        $('.woo-fitroom-preview-button').on('click', function() {
             console.log('Button Data Product ID:', $(this).data('product-id'));
             console.log('Button Data Product Image:', $(this).data('product-image'));
 
@@ -302,14 +562,14 @@
         });
 
         // Check credits and update button state
-        if (wooFashnaiPreview.credits <= 0) {
-            $('.woo-fashnai-preview-button').prop('disabled', true);
-            $('#woo-fashnai-preview-modal .preview-error .error-message').text(wooFashnaiPreview.i18n.out_of_credits).show();
+        if (WooFitroomPreview.credits <= 0) {
+            $('.woo-fitroom-preview-button').prop('disabled', true);
+            $('#woo-fitroom-preview-modal .preview-error .error-message').text(WooFitroomPreview.i18n.out_of_credits).show();
         } else {
-            $('.woo-fashnai-preview-button').prop('disabled', false);
+            $('.woo-fitroom-preview-button').prop('disabled', false);
         }
 
-        $('#woo-fashnai-preview-modal .preview-error').hide();
+        $('#woo-fitroom-preview-modal .preview-error').hide();
 
         console.log('WooTryOnTool Debug: jQuery is available');
         console.log('WooTryOnTool Debug: Document ready fired');
@@ -328,9 +588,8 @@
         console.log('WooTryOnTool Debug: Modal found after page load');
         console.log('WooTryOnTool Debug: Modal NOT found after page load');
 
-        if (wooFashnaiPreview.user_id && wooFashnaiPreview.user_id !== 0) {
-            $('#view-uploaded-images').show();
-        }
+        // Hide legacy button (replaced by inline strip)
+        $('#view-uploaded-images').hide();
 
         $('#user_image').on('change', function(){
             $('#saved_user_image_url').val('');
@@ -338,66 +597,76 @@
             if (this.files && this.files.length) {
                 $(this).prop('required', true);
                 // Show chosen file name
-                $('#selected-photo-name').text( __( 'Selected photo:', 'woo-fashnai-preview' ) + ' ' + this.files[0].name );
+                $('#selected-photo-name').text( __( 'Selected photo:', 'woo-fitroom-preview' ) + ' ' + this.files[0].name );
             } else {
                 $('#selected-photo-name').text('');
             }
         });
+
+        // Allow dropping of non-standard image extensions by trusting the server-side conversion
+        // (No client-side filtering beyond the accept attribute)
+
+        /* ----------------------------------------------------------
+           Enhance upload UX: click "Browse" triggers file dialog
+           and dragover styling for dropzone container
+           -------------------------------------------------------- */
+        $(document).on('click', '.upload-dropzone .dz-browse', function(e){
+            e.preventDefault();
+            $('#user_image').trigger('click');
+        });
+        const dz = $('#user_image_dropzone');
+        if (dz.length) {
+            // Make the whole box clickable and keyboard accessible
+            dz.attr('tabindex', '0').on('click', function(e){
+                // If the native input is present we can rely on it to open the dialog.
+                // Otherwise, trigger programmatically.
+                const input = document.getElementById('user_image');
+                if (!input || e.target === input) return; // native click already handled
+                if (!$(e.target).closest('.dz-browse').length) {
+                    $('#user_image').trigger('click');
+                }
+            }).on('keypress', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#user_image').trigger('click'); } });
+            dz.on('dragover dragenter', function(e){ e.preventDefault(); e.stopPropagation(); $(this).addClass('dragover'); });
+            dz.on('dragleave dragend drop', function(e){ e.preventDefault(); e.stopPropagation(); $(this).removeClass('dragover'); });
+            dz.on('drop', function(e){
+                const files = e.originalEvent.dataTransfer.files;
+                if (files && files.length) {
+                    const input = document.getElementById('user_image');
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(files[0]);
+                    input.files = dataTransfer.files;
+                    $('#user_image').trigger('change');
+                }
+            });
+        }
     });
 
     $(document).on('click', '#view-uploaded-images', function(e){
         e.preventDefault();
-        $.ajax({
-            url: wooFashnaiPreview.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'get_user_uploaded_images',
-                user_id: wooFashnaiPreview.user_id,
-                nonce: wooFashnaiPreview.nonce
-            },
-            success: function(res){
-                if (res.success && res.data.images.length){
-                    let html = '<div class="uploaded-images-grid">';
-                    res.data.images.forEach(u=>{ html += `<div class="img-item"><img src="${getProxyImageUrl(u)}"/></div>`; });
-                    html += '</div>';
-                    let modal = document.getElementById('uploaded-images-modal');
-                    if(!modal){
-                        $('body').append(`<div id="uploaded-images-modal" class="woo-fashnai-preview-modal" style="display:none;"><div class="modal-content"><span class="close">&times;</span><h3>My Photos</h3><div class="images-wrap"></div></div></div>`);
-                        modal = document.getElementById('uploaded-images-modal');
-                        $(modal).on('click','.close',()=>$(modal).hide());
-                        $(window).on('click',evt=>{ if(evt.target===modal){ $(modal).hide(); }});
-                    }
-                    $(modal).find('.images-wrap').html(html);
-                    $(modal).show();
-                    $(modal).off('click', '.img-item img').on('click','.img-item img',function(){
-                        const selectedImageUrl = $(this).attr('src');
-                        $('#saved_user_image_url').val(selectedImageUrl);
-                        // Clear file input and remove required since we are using saved image
-                        $('#user_image').val('').prop('required', false);
-                        // Display name of selected image for user feedback
-                        $('#selected-photo-name').text( __( 'Selected photo:', 'woo-fashnai-preview' ) + ' ' + selectedImageUrl.split('/').pop() );
-                        $(modal).hide();
-                        alert( __( 'Photo selected! Click Generate Preview.', 'woo-fashnai-preview' ) );
-                    });
-                } else {
-                    alert( __( 'No saved images.', 'woo-fashnai-preview' ) );
-                }
-            },
-            error: () => alert( __( 'Error fetching images', 'woo-fashnai-preview' ) )
-        });
+        openUploadedImagesModal();
     });
 
-    function getWasabiKeyFromUrl(url) {
-        // Example: https://s3.eu-west-1.wasabisys.com/tryontool-uploads/3/1748501547_phplIusaY.jpg
-        // Returns: 3/1748501547_phplIusaY.jpg
-        var match = url.match(/wasabisys\.com\/[^/]+\/(.+)$/);
-        return match ? match[1] : '';
+    // Extract object key from Wasabi URL irrespective of bucket / host
+    function getWasabiKeyFromUrl(url){
+        try {
+            const u       = new URL(url);
+            const bits    = u.pathname.replace(/^\/+/, '').split('/'); // [bucket, ...rest]
+            bits.shift();                                               // drop bucket
+            return bits.join('/');                                      // rest is key
+        } catch(e){
+            // Fallback: strip protocol+host then first segment (bucket)
+            return url.replace(/^https?:\/\/[^/]+\//, '').replace(/^[^/]+\//, '');
+        }
     }
 
-    // Helper: get proxy image URL
-    function getProxyImageUrl(wasabiUrl) {
-        var key = getWasabiKeyFromUrl(wasabiUrl);
-        return '/wp-json/woo-tryontool/v1/wasabi-image?key=' + encodeURIComponent(key);
+    // Helper: build proxy URL (only if Wasabi host detected)
+    function getProxyImageUrl(inputUrl){
+        if(!/wasabisys\.com/i.test(inputUrl)){ return inputUrl; }
+        const key = getWasabiKeyFromUrl(inputUrl);
+        if (!key) { return inputUrl; }
+        const base = '/wp-json/woo-tryontool/v1/wasabi-image?key=' + encodeURIComponent(key);
+        // Cache-bust thumbs so broken cached responses aren’t reused
+        return base + '&t=' + Date.now();
     }
 
 })(jQuery);

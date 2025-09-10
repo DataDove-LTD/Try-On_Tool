@@ -1,4 +1,4 @@
-/**
+﻿/**
  * A WooCommerce plugin that allows users to virtually try on clothing and accessories.
  *
  * @package Try-On Tool
@@ -19,4 +19,5 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-$button_text = __('Try-On Tool Preview', 'woo-fashnai-preview');
+$button_text = __('Try-On Tool Preview', 'woo-fitroom-preview');
+

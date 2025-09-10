@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * A WooCommerce plugin that allows users to virtually try on clothing and accessories.
  *
@@ -23,7 +23,7 @@
 /**
  * Handle the product page button display and functionality for TryOnTool
  */
-class WooFashnaiPreview_Product_Button {
+class WooFitroomPreview_Product_Button {
     /**
      * Initialize the class
      */
@@ -44,8 +44,8 @@ class WooFashnaiPreview_Product_Button {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
         
         // Add AJAX handlers
-        add_action('wp_ajax_woo_fashnai_generate_preview', array($this, 'handle_preview_generation'));
-        add_action('wp_ajax_nopriv_woo_fashnai_generate_preview', array($this, 'handle_preview_generation'));
+        add_action('wp_ajax_woo_fitroom_generate_preview', array($this, 'handle_preview_generation'));
+        add_action('wp_ajax_nopriv_woo_fitroom_generate_preview', array($this, 'handle_preview_generation'));
     }
 
     /**
@@ -60,12 +60,12 @@ class WooFashnaiPreview_Product_Button {
             return;
         }
 
-        if ( ! get_option( 'woo_fashnai_preview_enabled' ) ) {
+        if ( ! get_option( 'WOO_FITROOM_preview_enabled' ) ) {
             error_log('WooTryOnTool Plugin: Plugin not enabled');
             return;
         }
 
-        if ( empty( get_option( 'woo_fashnai_license_key' ) ) ) {
+        if ( empty( get_option( 'WOO_FITROOM_license_key' ) ) ) {
             // error_log('WooTryOnTool Plugin: License key not configured.');
             // return;
         }
@@ -112,20 +112,20 @@ class WooFashnaiPreview_Product_Button {
         <script>console.log('Product Image URL in HTML:', <?php echo json_encode($product_image_url); ?>);</script>
         
         <button type="button" 
-                class="button alt woo-fashnai-preview-button" 
+                class="button alt woo-fitroom-preview-button" 
                 data-product-id="<?php echo esc_attr($product->get_id()); ?>"
                 data-product-image="<?php echo esc_url($product_image_url); ?>"
-                style="margin-left: 10px;">
-            <?php _e('Try-On Tool Preview', 'woo-fashnai-preview'); ?>
+                style="margin-left: 10px !important;">
+            <?php _e('Try It On', 'woo-fitroom-preview'); ?>
         </button>
         <?php
     }
 
     private function current_user_can_use_feature() {
-        $logged_in_only   = (bool) get_option( 'woo_fashnai_logged_in_only' );
-        $allowed_roles    = (array) get_option( 'woo_fashnai_allowed_roles', array() );
-        $allowed_user_ids = array_filter(array_map('absint', explode(',', (string) get_option('woo_fashnai_allowed_user_ids', ''))));
-        $required_tag     = trim( (string) get_option( 'woo_fashnai_required_user_tag', '' ) );
+        $logged_in_only   = (bool) get_option( 'WOO_FITROOM_logged_in_only' );
+        $allowed_roles    = (array) get_option( 'WOO_FITROOM_allowed_roles', array() );
+        $allowed_user_ids = array_filter(array_map('absint', explode(',', (string) get_option('WOO_FITROOM_allowed_user_ids', ''))));
+        $required_tag     = trim( (string) get_option( 'WOO_FITROOM_required_user_tag', '' ) );
 
         if ( ! is_user_logged_in() ) {
             if ( $logged_in_only ) {
@@ -150,7 +150,7 @@ class WooFashnaiPreview_Product_Button {
         }
 
         if ( $required_tag !== '' ) {
-            $user_tag = get_user_meta( $user_id, 'woo_fashnai_user_tag', true );
+            $user_tag = get_user_meta( $user_id, 'woo_fitroom_user_tag', true );
             if ( $user_tag !== $required_tag ) {
                 return false;
             }
@@ -168,7 +168,7 @@ class WooFashnaiPreview_Product_Button {
             return;
         }
 
-        if ( ! get_option( 'woo_fashnai_preview_enabled' ) ) {
+        if ( ! get_option( 'WOO_FITROOM_preview_enabled' ) ) {
             return;
         }
 
@@ -185,8 +185,27 @@ class WooFashnaiPreview_Product_Button {
 
         $require_consent = true;
         if ( is_user_logged_in() ) {
-            $require_consent = ! (bool) get_user_meta( get_current_user_id(), 'woo_fashnai_user_consent', true );
+            // Back-compat: mirror legacy fashnai meta into fitroom if present
+            $uid_bc = get_current_user_id();
+            $legacy = get_user_meta( $uid_bc, 'woo_fashnai_user_consent', true );
+            if ( $legacy && ! get_user_meta( $uid_bc, 'woo_fitroom_user_consent', true ) ) {
+                update_user_meta( $uid_bc, 'woo_fitroom_user_consent', $legacy );
+            }
+            $legacy_t = get_user_meta( $uid_bc, 'woo_fashnai_terms_consent', true );
+            if ( $legacy_t && ! get_user_meta( $uid_bc, 'woo_fitroom_terms_consent', true ) ) {
+                update_user_meta( $uid_bc, 'woo_fitroom_terms_consent', $legacy_t );
+            }
+            $legacy_r = get_user_meta( $uid_bc, 'woo_fashnai_refund_consent', true );
+            if ( $legacy_r && ! get_user_meta( $uid_bc, 'woo_fitroom_refund_consent', true ) ) {
+                update_user_meta( $uid_bc, 'woo_fitroom_refund_consent', $legacy_r );
+            }
+            $require_consent = ! (bool) get_user_meta( $uid_bc, 'woo_fitroom_user_consent', true );
         }
+        // Pre-compute extra consents visibility so we can expose flags to JS
+        $require_extra_consents = get_option('WOO_FITROOM_require_extra_consents');
+        $terms_consent = is_user_logged_in() ? get_user_meta(get_current_user_id(), 'woo_fitroom_terms_consent', true) : false;
+        $refund_consent = is_user_logged_in() ? get_user_meta(get_current_user_id(), 'woo_fitroom_refund_consent', true) : false;
+        $show_extra_consents = ($require_extra_consents && is_user_logged_in() && ( ! $terms_consent || ! $refund_consent ));
         $product_image_url = '';
         if ($product) {
             $product_image_id = $product->get_image_id();
@@ -206,58 +225,65 @@ class WooFashnaiPreview_Product_Button {
 
         ?>
         <script>console.log('Modal template rendering started');</script>
-        <div id="woo-fashnai-preview-modal" class="woo-fashnai-preview-modal" style="display: none;">
+        <div id="woo-fitroom-preview-modal" class="woo-fitroom-preview-modal" style="display: none;" data-require-consent="<?php echo $require_consent ? '1' : '0'; ?>" data-show-extra-consents="<?php echo $show_extra_consents ? '1' : '0'; ?>">
             <div class="modal-content">
                 <span class="close">&times;</span>
-                <h2><?php _e('Try On with AI Preview', 'woo-fashnai-preview'); ?></h2>
+                <h2><?php _e('Try It On', 'woo-fitroom-preview'); ?></h2>
 
                 <!-- Product image preview removed as per user request -->
                 
                 <?php if ( is_user_logged_in() ) : ?>
-                <button id="view-uploaded-images" type="button" class="button" style="margin-bottom:10px;">
-                    <?php _e('My Uploaded Images', 'woo-fashnai-preview'); ?>
-                </button>
+                <div id="my_uploads_strip" class="my-uploads-strip" style="display:none; margin-bottom:12px;">
+                    <div class="strip-title" style="font-size:12px; color:#555; margin-bottom:8px;">
+                        <?php _e('My Uploads', 'woo-fitroom-preview'); ?>
+                    </div>
+                    <div id="my_uploads_list" class="strip-list"></div>
+                </div>
                 <?php endif; ?>
                 
-                <form id="woo-fashnai-preview-form" enctype="multipart/form-data">
+                <form id="woo-fitroom-preview-form" enctype="multipart/form-data">
                     <div class="form-field">
-                        <label for="user_image">
-                            <?php _e('Upload Your Photo:', 'woo-fashnai-preview'); ?>
-                        </label>
+                        <div class="upload-dropzone" id="user_image_dropzone">
                         <input type="file" 
                                id="user_image" 
                                name="user_image" 
-                               accept="image/*" 
+                               accept="image/*,.heic,.heif,.avif,.jfif,.jpe,.jpeg,.jpg,.bmp,.tif,.tiff,.png,.gif,.webp"
+                                   aria-label="<?php esc_attr_e('Upload your photo', 'woo-fitroom-preview'); ?>"
                                required>
-                        <p class="description">
-                            <?php _e('Use clear, sharp, front-facing images (no blur, text, or side views).<br> Fix Issues: Refresh, re-upload, or click "Try Again."', 'woo-fashnai-preview'); ?>
-                        </p>
+                            <div class="dz-inner">
+                                <div class="dz-icon" aria-hidden="true"></div>
+                                <div class="dz-copy">
+                                    <div class="dz-title">
+                                        <?php _e('Drop your image, or', 'woo-fitroom-preview'); ?>
+                                        <a href="#" class="dz-browse"><?php _e('Browse', 'woo-fitroom-preview'); ?></a>
+                                    </div>
+                                    <div class="dz-hint"><?php _e('Use clear, sharp, front-facing images (no blur, text, or side views).', 'woo-fitroom-preview'); ?></div>
+                                    <div class="dz-hint"><?php _e('Fix issues: Refresh, re-upload, or click "Try Again"', 'woo-fitroom-preview'); ?></div>
+                                </div>
+                            </div>
+                        </div>
                         <p id="selected-photo-name" class="selected-photo-name" style="margin-top:5px; font-style:italic; color:#555;"></p>
 
                         <?php if ( $require_consent ) : ?>
-                        <div class="form-field" style="margin-top:15px;">
+                        <div class="form-field" style="margin-top:15px; margin-bottom:-15px !important;">
                             <label>
-                                <input type="checkbox" id="user_consent" name="user_consent" required>
-                                <?php _e('I consent to the processing of my uploaded images for generating previews.', 'woo-fashnai-preview'); ?>
+                                <input type="checkbox" id="user_consent" style="border: 1px solid;" name="user_consent" required>
+                                <?php _e('I consent to the processing of my uploaded images for generating previews.', 'woo-fitroom-preview'); ?>
                             </label>
                         </div>
                         <?php endif; ?>
                     </div>
 
-                    <?php
-                    $require_extra_consents = get_option('woo_fashnai_require_extra_consents');
-                    $terms_consent = is_user_logged_in() ? get_user_meta(get_current_user_id(), 'woo_fashnai_terms_consent', true) : false;
-                    $refund_consent = is_user_logged_in() ? get_user_meta(get_current_user_id(), 'woo_fashnai_refund_consent', true) : false;
-                    ?>
-                    <?php if ($require_extra_consents && is_user_logged_in()) : ?>
-                        <div class="form-field" style="margin-top:15px;">
+                    <?php // variables already computed above: $show_extra_consents ?>
+                    <?php if ($show_extra_consents) : ?>
+                        <div class="form-field" style="margin-top:7px;">
                             <label>
-                                <input type="checkbox" id="terms_consent" name="terms_consent" required>
-                                <?php _e('I agree to the Terms and Privacy Policy.', 'woo-fashnai-preview'); ?>
+                                <input type="checkbox" id="terms_consent" style="border: 1px solid;" name="terms_consent" required>
+                                <?php _e('I agree to the Terms and Privacy Policy.', 'woo-fitroom-preview'); ?>
                             </label>
                             <label>
-                                <input type="checkbox" id="refund_consent" name="refund_consent" required>
-                                <?php _e('I understand previews may be inaccurate and agree to the Refund Policy.', 'woo-fashnai-preview'); ?>
+                                <input type="checkbox" id="refund_consent" style="border: 1px solid;" name="refund_consent" required>
+                                <?php _e('I understand previews may be inaccurate and agree to the Refund Policy.', 'woo-fitroom-preview'); ?>
                             </label>
                         </div>
                     <?php endif; ?>
@@ -268,18 +294,28 @@ class WooFashnaiPreview_Product_Button {
                     
                     <div class="form-submit">
                         <button type="submit" class="button alt">
-                            <?php _e('Generate Preview', 'woo-fashnai-preview'); ?>
+                            <?php _e('Generate Preview', 'woo-fitroom-preview'); ?>
                         </button>
                     </div>
                 </form>
 
                 <div class="preview-result" style="display: none;">
-                    <h3><?php _e('Your AI Preview', 'woo-fashnai-preview'); ?></h3>
+                    <h3 class="preview-title"><?php _e('Your Try On Preview', 'woo-fitroom-preview'); ?></h3>
                     <div class="preview-image"></div>
-                    <div class="preview-actions">
+                    <div class="preview-footer">
+                        <div class="left-actions">
                         <button class="button download-preview">
-                            <?php _e('Download Preview', 'woo-fashnai-preview'); ?>
+                            <?php _e('Download Preview', 'woo-fitroom-preview'); ?>
                         </button>
+                        </div>
+                        <div class="right-actions preview-toolbar">
+                            <button type="button" class="icon-btn share-preview" title="<?php esc_attr_e('Share', 'woo-fitroom-preview'); ?>" aria-label="<?php esc_attr_e('Share', 'woo-fitroom-preview'); ?>">
+                                <span class="icon-svg share-icon" aria-hidden="true"></span>
+                            </button>
+                            <button type="button" class="icon-btn regenerate-preview" title="<?php esc_attr_e('Regenerate', 'woo-fitroom-preview'); ?>" aria-label="<?php esc_attr_e('Regenerate', 'woo-fitroom-preview'); ?>">
+                                <span class="icon-svg regenerate-icon" aria-hidden="true"></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -296,38 +332,38 @@ class WooFashnaiPreview_Product_Button {
             return;
         }
 
-        if ( ! get_option( 'woo_fashnai_preview_enabled' ) ) {
+        if ( ! get_option( 'WOO_FITROOM_preview_enabled' ) ) {
             return;
         }
 
         wp_enqueue_style(
-            'woo-fashnai-preview-product',
-            WOO_FASHNAI_PREVIEW_PLUGIN_URL . 'assets/css/product-preview.css',
+            'woo-fitroom-preview-product',
+            WOO_FITROOM_PREVIEW_PLUGIN_URL . 'assets/css/product-preview.css',
             array(),
-            WOO_FASHNAI_PREVIEW_VERSION
+            WOO_FITROOM_PREVIEW_VERSION
         );
 
         wp_enqueue_script(
-            'woo-fashnai-preview-product',
-            WOO_FASHNAI_PREVIEW_PLUGIN_URL . 'assets/js/product-preview.js',
+            'woo-fitroom-preview-product',
+            WOO_FITROOM_PREVIEW_PLUGIN_URL . 'assets/js/product-preview.js',
             array( 'jquery', 'wp-i18n' ),
-            WOO_FASHNAI_PREVIEW_VERSION,
+            WOO_FITROOM_PREVIEW_VERSION,
             true
         );
 
         wp_localize_script(
-            'woo-fashnai-preview-product',
-            'wooFashnaiPreview',
+            'woo-fitroom-preview-product',
+            'WooFitroomPreview',
             array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('woo_fashnai_preview_nonce'),
+                'nonce' => wp_create_nonce('woo_fitroom_preview_nonce'),
                 'credits' => get_user_credits(),
                 'user_id' => get_current_user_id(),
                 'i18n' => array(
-                    'processing' => __('Generating preview...', 'woo-fashnai-preview'),
-                    'error' => __('Error generating preview', 'woo-fashnai-preview'),
-                    'success' => __('Generate Preview', 'woo-fashnai-preview'),
-                    'out_of_credits' => __('You are out of credits. Please purchase more to continue.', 'woo-fashnai-preview')
+                    'processing' => __('Generating preview...', 'woo-fitroom-preview'),
+                    'error' => __('Error generating preview', 'woo-fitroom-preview'),
+                    'success' => __('Generate Preview', 'woo-fitroom-preview'),
+                    'out_of_credits' => __('You are out of credits. Please purchase more to continue.', 'woo-fitroom-preview')
                 )
             )
         );
@@ -339,7 +375,7 @@ class WooFashnaiPreview_Product_Button {
         error_log('WooTryOnTool Plugin: POST data: ' . print_r($_POST, true));
         error_log('WooTryOnTool Plugin: FILES data: ' . print_r($_FILES, true));
         
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'woo_fashnai_preview_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'woo_fitroom_preview_nonce')) {
             error_log('WooTryOnTool Plugin: Nonce verification failed');
             wp_send_json_error(array('message' => __('Security check failed', 'woo-tryontool-preview')));
         }
@@ -356,20 +392,20 @@ class WooFashnaiPreview_Product_Button {
 
         if ( is_user_logged_in() ) {
             $uid          = get_current_user_id();
-            $existing_ts  = get_user_meta( $uid, 'woo_fashnai_user_consent', true );
+            $existing_ts  = get_user_meta( $uid, 'woo_fitroom_user_consent', true );
 
             if ( ! $existing_ts ) {
                 // Ensure checkbox ticked for very first preview.
                 if ( empty( $_POST['user_consent'] ) ) {
-                    wp_send_json_error( array( 'message' => __( 'Please provide consent before generating a preview.', 'woo-fashnai-preview' ) ) );
+                    wp_send_json_error( array( 'message' => __( 'Please provide consent before generating a preview.', 'woo-fitroom-preview' ) ) );
                 }
 
                 // Record consent *once* – do NOT overwrite later.
                 $now_mysql = current_time( 'mysql' );
-                update_user_meta( $uid, 'woo_fashnai_user_consent', $now_mysql );
+                update_user_meta( $uid, 'woo_fitroom_user_consent', $now_mysql );
 
                 // Site-wide consent registry
-                $consents   = get_option( 'woo_fashnai_consents', array() );
+                $consents   = get_option( 'WOO_FITROOM_consents', array() );
                 $user_obj   = wp_get_current_user();
                 $consents[ $uid ] = array(
                     'user_id'          => $uid,
@@ -377,31 +413,28 @@ class WooFashnaiPreview_Product_Button {
                     'consent_timestamp'=> $now_mysql,
                     // last_login added via the wp_login hook
                 );
-                update_option( 'woo_fashnai_consents', $consents, false );
+                update_option( 'WOO_FITROOM_consents', $consents, false );
             }
         }
 
-        $require_extra_consents = get_option('woo_fashnai_require_extra_consents');
+        $require_extra_consents = get_option('WOO_FITROOM_require_extra_consents');
         if ($require_extra_consents && is_user_logged_in()) {
             $uid = get_current_user_id();
-            
-            // Always require consent checkboxes when setting is enabled
-            if (empty($_POST['terms_consent'])) {
-                wp_send_json_error(array('message' => __('You must agree to the Terms of Use and Privacy Policy.', 'woo-fashnai-preview')));
+            $has_terms   = (bool) get_user_meta($uid, 'woo_fitroom_terms_consent', true);
+            $has_refund  = (bool) get_user_meta($uid, 'woo_fitroom_refund_consent', true);
+
+            // Only require checkboxes if not previously recorded
+            if (!$has_terms) {
+                if (empty($_POST['terms_consent'])) {
+                    wp_send_json_error(array('message' => __('You must agree to the Terms of Use and Privacy Policy.', 'woo-fitroom-preview')));
+                }
+                update_user_meta($uid, 'woo_fitroom_terms_consent', current_time('mysql'));
             }
-            if (empty($_POST['refund_consent'])) {
-                wp_send_json_error(array('message' => __('You must agree to the Refund Policy.', 'woo-fashnai-preview')));
-            }
-            
-            // Update consent timestamps if not already set
-            $terms_consent = get_user_meta($uid, 'woo_fashnai_terms_consent', true);
-            $refund_consent = get_user_meta($uid, 'woo_fashnai_refund_consent', true);
-            
-            if (!$terms_consent) {
-                update_user_meta($uid, 'woo_fashnai_terms_consent', current_time('mysql'));
-            }
-            if (!$refund_consent) {
-                update_user_meta($uid, 'woo_fashnai_refund_consent', current_time('mysql'));
+            if (!$has_refund) {
+                if (empty($_POST['refund_consent'])) {
+                    wp_send_json_error(array('message' => __('You must agree to the Refund Policy.', 'woo-fitroom-preview')));
+                }
+                update_user_meta($uid, 'woo_fitroom_refund_consent', current_time('mysql'));
             }
         }
 
@@ -411,8 +444,35 @@ class WooFashnaiPreview_Product_Button {
         if (!isset($_FILES['user_image']) || $_FILES['user_image']['error'] !== UPLOAD_ERR_OK) {
             // No fresh upload – try saved image URL
             if (!empty($_POST['saved_user_image_url'])) {
-                $remote_url = esc_url_raw(home_url($_POST['saved_user_image_url']));
-                error_log('Attempting to download image from full URL: ' . $remote_url);
+                $incoming = trim((string) $_POST['saved_user_image_url']);
+                $remote_url = '';
+                // If it's an absolute URL, use as-is; if it's a path, prefix with home_url
+                if (preg_match('#^https?://#i', $incoming)) {
+                    $remote_url = esc_url_raw($incoming);
+                } else {
+                    $remote_url = esc_url_raw(home_url($incoming));
+                }
+
+                // If the URL points to Wasabi, route through our public proxy endpoint for reliability
+                if (strpos($remote_url, 'wasabisys.com') !== false) {
+                    // ensure client initialised to know bucket name
+                    if (!class_exists('WooFITROOM_Wasabi')) {
+                        require_once WOO_FITROOM_PREVIEW_PLUGIN_DIR . 'includes/class-wasabi-client.php';
+                    }
+                    $bucket = method_exists('WooFITROOM_Wasabi','bucket') ? WooFITROOM_Wasabi::bucket() : '';
+                    $pattern = '#https?://[^/]+/' . preg_quote($bucket, '#') . '/#';
+                    $key = preg_replace($pattern, '', $remote_url);
+                    if ($key === $remote_url) {
+                        // fallback: strip host and first segment (bucket)
+                        $parsed = parse_url($remote_url);
+                        $path = isset($parsed['path']) ? ltrim($parsed['path'],'/') : '';
+                        $parts = explode('/', $path, 2);
+                        $key = isset($parts[1]) ? $parts[1] : $path;
+                    }
+                    $remote_url = home_url('/wp-json/woo-tryontool/v1/wasabi-image?key=' . rawurlencode($key));
+                }
+
+                error_log('Attempting to download image from URL: ' . $remote_url);
                 
                 if (!function_exists('download_url')) {
                     require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -451,12 +511,12 @@ class WooFashnaiPreview_Product_Button {
             wp_send_json_error(array( 'message' => __( 'You are not allowed to use this feature.', 'woo-tryontool-preview' ) ) );
         }
 
-        $daily_limit = absint(get_option('woo_fashnai_daily_credits', 0));
+        $daily_limit = absint(get_option('WOO_FITROOM_daily_credits', 0));
         if ($daily_limit > 0 && is_user_logged_in()) {
             $user_id       = get_current_user_id();
             $today         = date('Y-m-d');
-            $meta_key_date = 'woo_fashnai_daily_date';
-            $meta_key_used = 'woo_fashnai_daily_used';
+            $meta_key_date = 'woo_fitroom_daily_date';
+            $meta_key_used = 'woo_fitroom_daily_used';
 
             $stored_date = get_user_meta($user_id, $meta_key_date, true);
             $used        = intval(get_user_meta($user_id, $meta_key_used, true));
@@ -474,21 +534,22 @@ class WooFashnaiPreview_Product_Button {
         }
 
         $uploaded_file_path = $_FILES['user_image']['tmp_name'];
-        $image_type = exif_imagetype($uploaded_file_path);
-
-        if ($image_type !== IMAGETYPE_JPEG && $image_type !== IMAGETYPE_PNG) {
+        // Always convert to JPEG for backend consistency
             $uploaded_file_path = $this->convert_to_jpeg($uploaded_file_path);
-        }
 
         // Save permanent copy for logged-in users (only when fresh upload)
+        $uploaded_photo_final_url = null;
         if (is_user_logged_in() && !$using_saved_image) {
             $user_id = get_current_user_id();
-            $url = WooFashnai_Wasabi::upload( $user_id, $uploaded_file_path );
+            $url = WooFITROOM_Wasabi::upload( $user_id, $uploaded_file_path );
+            if ( $url ) {
+                $uploaded_photo_final_url = $url;
+            }
             // NO user-meta needed any more
         }
 
         try {
-            $api_handler = new WooFashnaiPreview_API_Handler();
+            $api_handler = new WooFitroomPreview_API_Handler();
             
             $product_category = '';
             $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
@@ -558,7 +619,7 @@ class WooFashnaiPreview_Product_Button {
                 error_log('WooTryOnTool Plugin: API error: ' . $response->get_error_message());
                 
                 $upload_dir = wp_upload_dir();
-                $debug_dir = $upload_dir['basedir'] . '/woo-fashnai-debug';
+                $debug_dir = $upload_dir['basedir'] . '/woo-fitroom-debug';
                 if (!file_exists($debug_dir)) {
                     wp_mkdir_p($debug_dir);
                 }
@@ -592,18 +653,22 @@ class WooFashnaiPreview_Product_Button {
             if (isset($response['image_url']) && !empty($response['image_url'])) {
                  error_log('WooTryOnTool Plugin: Found image URL in response: ' . $response['image_url']);
 
-                $daily_limit = absint(get_option('woo_fashnai_daily_credits', 0));
+                $daily_limit = absint(get_option('WOO_FITROOM_daily_credits', 0));
                 if ($daily_limit > 0 && is_user_logged_in()) {
                     $user_id       = get_current_user_id();
-                    $meta_key_used = 'woo_fashnai_daily_used';
+                    $meta_key_used = 'woo_fitroom_daily_used';
                     $used          = intval(get_user_meta($user_id, $meta_key_used, true));
                     update_user_meta($user_id, $meta_key_used, $used + 1);
                 }
 
-                wp_send_json_success(array(
+                $payload = array(
                     'image_url' => $response['image_url'],
                     'message' => __('Preview generated successfully', 'woo-tryontool-preview')
-                ));
+                );
+                if ( $uploaded_photo_final_url ) {
+                    $payload['user_image_saved_url'] = $uploaded_photo_final_url;
+                }
+                wp_send_json_success( $payload );
             } else {
                 error_log('WooTryOnTool Plugin: Success response received, but image_url missing or empty. Response: ' . print_r($response, true));
                 wp_send_json_error(array(
@@ -656,7 +721,7 @@ class WooFashnaiPreview_Product_Button {
 
         if ($src_img) {
             $upload_dir = wp_upload_dir();
-            $jpeg_file = $upload_dir['basedir'] . '/woo-fashnai-temp/' . uniqid('converted_') . '.jpg';
+            $jpeg_file = $upload_dir['basedir'] . '/woo-fitroom-temp/' . uniqid('converted_') . '.jpg';
 
             // Ensure temp dir exists
             if (!file_exists(dirname($jpeg_file))) {
@@ -687,7 +752,7 @@ class WooFashnaiPreview_Product_Button {
                     console.log('WooTryOnTool Debug: jQuery is available');
                     jQuery(document).ready(function($) {
                         console.log('WooTryOnTool Debug: Document ready fired');
-                        console.log('WooTryOnTool Debug: Button elements found:', $('.woo-tryontool-preview-button').length);
+                        console.log('WooTryOnTool Debug: Button elements found:', $('.woo-fitroom-preview-button').length);
                         
                         window.checkModalImage = function() {
                             var imgElement = document.getElementById('preview-product-image');
@@ -706,21 +771,21 @@ class WooFashnaiPreview_Product_Button {
                             }
                         };
                         
-                        $('.woo-tryontool-preview-button').on('click', function() {
+                        $('.woo-fitroom-preview-button').on('click', function() {
                             console.log('Button Data Product ID:', $(this).data('product-id'));
                             console.log('Button Data Product Image:', $(this).data('product-image'));
                             
                             setTimeout(window.checkModalImage, 500);
                         });
 
-                        if (wooFashnaiPreview.credits <= 0) {
-                            $('.woo-tryontool-preview-button').prop('disabled', true);
-                            $('#woo-tryontool-preview-modal .preview-error .error-message').text(wooFashnaiPreview.i18n.out_of_credits).show();
+                        if (WooFitroomPreview.credits <= 0) {
+                            $('.woo-fitroom-preview-button').prop('disabled', true);
+                            $('#woo-fitroom-preview-modal .preview-error .error-message').text(WooFitroomPreview.i18n.out_of_credits).show();
                         } else {
-                            $('.woo-tryontool-preview-button').prop('disabled', false);
+                            $('.woo-fitroom-preview-button').prop('disabled', false);
                         }
 
-                        $('#woo-tryontool-preview-modal .preview-error .error-message').hide();
+                        $('#woo-fitroom-preview-modal .preview-error .error-message').hide();
                     });
                 } else {
                     setTimeout(checkJQuery, 100);
@@ -731,13 +796,13 @@ class WooFashnaiPreview_Product_Button {
             window.addEventListener('load', function() {
                 console.log('WooTryOnTool Debug: Window load event fired');
                 
-                if (document.querySelector('.woo-tryontool-preview-button')) {
+                if (document.querySelector('.woo-fitroom-preview-button')) {
                     console.log('WooTryOnTool Debug: Button found after page load');
                 } else {
                     console.log('WooTryOnTool Debug: Button NOT found after page load');
                 }
                 
-                if (document.getElementById('woo-tryontool-preview-modal')) {
+                if (document.getElementById('woo-fitroom-preview-modal')) {
                     console.log('WooTryOnTool Debug: Modal found after page load');
                 } else {
                     console.log('WooTryOnTool Debug: Modal NOT found after page load');
@@ -750,7 +815,7 @@ class WooFashnaiPreview_Product_Button {
     // Add a function to store image URL and timestamp in a transient
     private function store_image_for_deletion($user_id, $image_url) {
         // Register a transient for this specific image (allow multiple per user)
-        $transient_key = 'woo_fashnai_image_deletion_' . md5($image_url);
+        $transient_key = 'woo_fitroom_image_deletion_' . md5($image_url);
         $data = array('user_id' => $user_id, 'image_url' => $image_url, 'timestamp' => time());
         set_transient($transient_key, $data, 0);
         error_log('WooTryOnTool: Transient set for image deletion -> ' . $transient_key);
@@ -769,12 +834,12 @@ class WooFashnaiPreview_Product_Button {
 
     // Make the check_and_delete_images method static
     public static function check_and_delete_images() {
-        if ( ! defined( 'WOO_FASHNAI_INACTIVITY_WINDOW' ) ) {
+        if ( ! defined( 'WOO_FITROOM_INACTIVITY_WINDOW' ) ) {
             return; // safety guard – constant should be defined in main plugin file
         }
 
         global $wpdb;
-        $prefix = '_transient_woo_fashnai_pending_delete_';
+        $prefix = '_transient_WOO_FITROOM_pending_delete_';
         $rows   = $wpdb->get_results( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $prefix . '%' ) );
 
         foreach ( $rows as $row ) {
@@ -782,18 +847,18 @@ class WooFashnaiPreview_Product_Button {
             $logout_time   = get_transient( $transient_key );
 
             // Extract the user-ID from the transient name
-            $user_id = intval( str_replace( 'woo_fashnai_pending_delete_', '', $transient_key ) );
+            $user_id = intval( str_replace( 'WOO_FITROOM_pending_delete_', '', $transient_key ) );
             if ( ! $user_id ) {
                 continue;
             }
 
             // If the transient has vanished (false) *or* exceeded the inactivity window
-            if ( ! $logout_time || ( time() - intval( $logout_time ) ) > WOO_FASHNAI_INACTIVITY_WINDOW ) {
+            if ( ! $logout_time || ( time() - intval( $logout_time ) ) > WOO_FITROOM_INACTIVITY_WINDOW ) {
                 // Initialise Wasabi client so bucket is set
-                WooFashnai_Wasabi::client();
+                WooFITROOM_Wasabi::client();
 
                 // Fetch & delete every object that belongs to this user
-                $images = WooFashnai_Wasabi::list_user_images( $user_id );
+                $images = WooFITROOM_Wasabi::list_user_images( $user_id );
                 foreach ( $images as $url ) {
                     self::delete_image( $user_id, $url );
                 }
@@ -811,9 +876,9 @@ class WooFashnaiPreview_Product_Button {
         }
 
         // Ensure Wasabi client is initialised so that ::bucket() has a value
-        WooFashnai_Wasabi::client();
+        WooFITROOM_Wasabi::client();
 
-        $bucket = WooFashnai_Wasabi::bucket();
+        $bucket = WooFITROOM_Wasabi::bucket();
 
         // Extract the S3 object key from the full URL.  We support both
         // …/bucket-name/key  and any custom Wasabi region endpoints.
@@ -826,7 +891,7 @@ class WooFashnaiPreview_Product_Button {
         }
 
         if ( $key && $key !== $image_url ) {
-            WooFashnai_Wasabi::delete( $key );
+            WooFITROOM_Wasabi::delete( $key );
             error_log( 'WooTryOnTool: deleted ' . $key . ' for user ' . $user_id );
         } else {
             error_log( 'WooTryOnTool: could not parse Wasabi key from URL ' . $image_url );
@@ -837,41 +902,41 @@ class WooFashnaiPreview_Product_Button {
 }
 
 function get_user_credits() {
-    $credits = get_option('woo_fashnai_license_credits', 0);
+    $credits = get_option('WOO_FITROOM_license_credits', 0);
     return $credits;
 }
 
 // Add helper functions for storing images in user meta
-function woo_fashnai_get_user_uploaded_images($user_id) {
-    return WooFashnai_Wasabi::list_user_images($user_id);
+function WOO_FITROOM_get_user_uploaded_images($user_id) {
+    return WooFITROOM_Wasabi::list_user_images($user_id);
 }
 
-function woo_fashnai_save_uploaded_image_url($user_id, $url) {
+function WOO_FITROOM_save_uploaded_image_url($user_id, $url) {
     // No longer needed – images live in Wasabi only
 }
 
 add_action('wp_ajax_get_user_uploaded_images', function() {
-    check_ajax_referer('woo_fashnai_preview_nonce', 'nonce');
+    check_ajax_referer('woo_fitroom_preview_nonce', 'nonce');
     $uid = absint($_POST['user_id'] ?? 0);
     if ( ! $uid ) {
         wp_send_json_error();
     }
-    $imgs = woo_fashnai_get_user_uploaded_images($uid);
+    $imgs = WOO_FITROOM_get_user_uploaded_images($uid);
     error_log('WooTryOnTool: Returning '.count($imgs).' saved images for user '.$uid);
     wp_send_json_success(array('images' => $imgs));
 });
 
 // Allow non-logged-in visitors to fetch their uploads (they'll just get an empty list).
 add_action('wp_ajax_nopriv_get_user_uploaded_images', function() {
-    check_ajax_referer('woo_fashnai_preview_nonce', 'nonce');
+    check_ajax_referer('woo_fitroom_preview_nonce', 'nonce');
     wp_send_json_success(array('images' => array()));
 });
 
 // Add the action hook for deleting the image
-add_action('woo_fashnai_delete_user_image', function($user_id, $image_url) {
+add_action('woo_fitroom_delete_user_image', function($user_id, $image_url) {
     error_log('Attempting to delete image for user ' . $user_id . ' and image ' . $image_url);
     // Get the user's uploaded images
-    $images = woo_fashnai_get_user_uploaded_images($user_id);
+    $images = WOO_FITROOM_get_user_uploaded_images($user_id);
     
     // Remove the image URL from the user's meta data
     $images = array_filter($images, function($url) use ($image_url) {
@@ -879,7 +944,7 @@ add_action('woo_fashnai_delete_user_image', function($user_id, $image_url) {
     });
     // Reindex array to maintain sequential keys so JSON encoding gives JS array
     $images = array_values($images);
-    WooFashnai_Wasabi::update_user_images($user_id, $images);
+    // No longer storing in user meta; list() pulls directly from Wasabi
     
     // Delete the image file from the server
     $upload_dir = wp_upload_dir();
@@ -893,4 +958,5 @@ add_action('woo_fashnai_delete_user_image', function($user_id, $image_url) {
 });
 
 // Adjust the hook to call the static method
-add_action('init', array('WooFashnaiPreview_Product_Button', 'check_and_delete_images'));
+add_action('init', array('WooFitroomPreview_Product_Button', 'check_and_delete_images'));
+

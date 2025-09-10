@@ -1,8 +1,8 @@
-# Git Release Workflow - Try-On Tool v1.1.0
+# Git Release Workflow - Try-On Tool v1.2.0
 
 ## Current Status
-- **Current Version:** 1.1.0
-- **Previous Version:** 1.0.0
+- **Current Version:** 1.2.0
+- **Previous Version:** 1.1.0
 - **Release Type:** Feature Release
 - **Branch:** master (needs to be renamed to main)
 
@@ -17,7 +17,7 @@ git status
 git add .
 
 # Commit current changes
-git commit -m "Prepare release v1.1.0"
+git commit -m "Prepare release v1.2.0"
 ```
 
 ### Step 2: Rename Master to Main (if needed)
@@ -35,7 +35,7 @@ git push origin --delete master
 ### Step 3: Create Release Branch
 ```bash
 # Create release branch
-git checkout -b release/v1.1.0
+git checkout -b release/v1.2.0
 
 # Verify you're on the release branch
 git branch
@@ -51,7 +51,7 @@ git branch
 ### Step 5: Create Release Tag
 ```bash
 # Create annotated tag
-git tag -a v1.1.0 -m "Release version 1.1.0
+git tag -a v1.2.0 -m "Release version 1.2.0
 
 - Initial release of Try-On Tool plugin
 - WooCommerce integration for virtual try-on functionality
@@ -59,7 +59,7 @@ git tag -a v1.1.0 -m "Release version 1.1.0
 - Frontend try-on button and modal interface"
 
 # Push tag to remote
-git push origin v1.1.0
+git push origin v1.2.0
 ```
 
 ### Step 6: Merge to Main
@@ -68,7 +68,7 @@ git push origin v1.1.0
 git checkout main
 
 # Merge release branch
-git merge release/v1.1.0
+git merge release/v1.2.0
 
 # Push to main
 git push origin main
@@ -77,10 +77,10 @@ git push origin main
 ### Step 7: Clean Up
 ```bash
 # Delete release branch locally
-git branch -d release/v1.1.0
+git branch -d release/v1.2.0
 
 # Delete release branch on remote
-git push origin --delete release/v1.1.0
+git push origin --delete release/v1.2.0
 ```
 
 ### Step 8: Create GitHub Release
@@ -93,12 +93,12 @@ git push origin --delete release/v1.1.0
    - Click "Create a new release"
 
 3. **Configure Release**
-   - **Tag version:** `v1.1.0`
-- **Release title:** `Try-On Tool v1.1.0`
+   - **Tag version:** `v1.2.0`
+- **Release title:** `Try-On Tool v1.2.0`
    - **Description:** Copy from CHANGELOG.md
 
 4. **Upload Files**
-   - Create zip file: `try-on_tool_plugin_v1.1.0.zip`
+   - Create zip file: `try-on_tool_plugin_v1.2.0.zip`
    - Upload to GitHub release
 
 5. **Publish Release**
@@ -107,7 +107,7 @@ git push origin --delete release/v1.1.0
 ## Release Notes for GitHub
 
 ```markdown
-# Try-On Tool v1.1.0
+# Try-On Tool v1.2.0
 
 ## What's New
 This is the initial release of the Try-On Tool plugin for WooCommerce.

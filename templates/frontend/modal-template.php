@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * A WooCommerce plugin that allows users to virtually try on clothing and accessories.
  *
@@ -21,9 +21,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 ?>
-       <h2><?php _e('Try-On Tool Preview', 'woo-fashnai-preview'); ?></h2>
+       <h2><?php _e('Try-On Tool Preview', 'woo-fitroom-preview'); ?></h2>
 
 <!-- Add image element for preview -->
 <div class="product-image-preview">
     <img id="preview-product-image" src="" alt="Product Preview" style="display:none;" />
 </div>
+
