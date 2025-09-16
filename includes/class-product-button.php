@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * A WooCommerce plugin that allows users to virtually try on clothing and accessories.
  *
@@ -252,6 +252,7 @@ class WooFitroomPreview_Product_Button {
                                required>
                             <div class="dz-inner">
                                 <div class="dz-icon" aria-hidden="true"></div>
+                                <img class="dz-thumb" alt="" />
                                 <div class="dz-copy">
                                     <div class="dz-title">
                                         <?php _e('Drop your image, or', 'woo-fitroom-preview'); ?>
@@ -930,6 +931,69 @@ add_action('wp_ajax_get_user_uploaded_images', function() {
 add_action('wp_ajax_nopriv_get_user_uploaded_images', function() {
     check_ajax_referer('woo_fitroom_preview_nonce', 'nonce');
     wp_send_json_success(array('images' => array()));
+});
+
+// Add AJAX handler for deleting uploaded images
+add_action('wp_ajax_delete_user_uploaded_image', function() {
+    check_ajax_referer('woo_fitroom_preview_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => __('You must be logged in to delete images.', 'woo-fitroom-preview')));
+    }
+    
+    $user_id = absint($_POST['user_id'] ?? 0);
+    $image_url = sanitize_url($_POST['image_url'] ?? '');
+    
+    if (!$user_id || !$image_url) {
+        wp_send_json_error(array('message' => __('Invalid parameters.', 'woo-fitroom-preview')));
+    }
+    
+    // Verify the image belongs to the current user
+    $user_images = WOO_FITROOM_get_user_uploaded_images($user_id);
+    if (!in_array($image_url, $user_images)) {
+        wp_send_json_error(array('message' => __('Image not found or access denied.', 'woo-fitroom-preview')));
+    }
+    
+    // Delete the image from Wasabi
+    try {
+        // Ensure Wasabi client is initialized
+        if (!class_exists('WooFITROOM_Wasabi')) {
+            require_once WOO_FITROOM_PREVIEW_PLUGIN_DIR . 'includes/class-wasabi-client.php';
+        }
+        
+        WooFITROOM_Wasabi::client();
+        $bucket = WooFITROOM_Wasabi::bucket();
+        
+        // Extract the S3 object key from the full URL
+        $pattern = '#https?://[^/]+/' . preg_quote($bucket, '#') . '/#';
+        $key = preg_replace($pattern, '', $image_url);
+        
+        // Fallback: if the regex failed, fall back to the legacy str_replace
+        if ($key === $image_url) {
+            $key = str_replace('https://s3.eu-west-1.wasabisys.com/' . $bucket . '/', '', $image_url);
+        }
+        
+        if ($key && $key !== $image_url) {
+            error_log('Wasabi Delete Debug: Attempting to delete key: ' . $key);
+            $result = WooFITROOM_Wasabi::delete($key);
+            error_log('Wasabi Delete Debug: Delete result: ' . ($result ? 'success' : 'failed'));
+            if ($result) {
+                // Also clean up the transient for this image
+                $transient_key = 'WOO_FITROOM_image_deletion_' . md5($key);
+                delete_transient($transient_key);
+                error_log('Wasabi Delete Debug: Cleaned up transient for key: ' . $key);
+                wp_send_json_success(array('message' => __('Image deleted successfully.', 'woo-fitroom-preview')));
+            } else {
+                wp_send_json_error(array('message' => __('Failed to delete image from storage.', 'woo-fitroom-preview')));
+            }
+        } else {
+            error_log('Wasabi Delete Debug: Could not parse key from URL: ' . $image_url);
+            wp_send_json_error(array('message' => __('Could not parse image URL.', 'woo-fitroom-preview')));
+        }
+    } catch (Exception $e) {
+        error_log('Error deleting image: ' . $e->getMessage());
+        wp_send_json_error(array('message' => __('An error occurred while deleting the image.', 'woo-fitroom-preview')));
+    }
 });
 
 // Add the action hook for deleting the image

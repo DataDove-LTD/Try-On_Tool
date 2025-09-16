@@ -113,7 +113,7 @@
                             const strip = $('#my_uploads_strip');
                             strip.show();
                             list.empty();
-                            const maxThumbs = 5;
+                            const maxThumbs = 3;
                             const images = res.data.images;
                             const visible = images.slice(0, maxThumbs);
                             visible.forEach((u, idx) => {
@@ -122,7 +122,7 @@
                                     list.append(`<div class="thumb more" id="my_uploads_more"><span>${__('View More','woo-fitroom-preview')}</span></div>`);
                                 } else {
                                     const prox = getProxyImageUrl(u);
-                                    list.append(`<div class="thumb" data-url="${u}"><img src="${prox}" data-url="${u}" alt="uploaded"/></div>`);
+                                    list.append(`<div class="thumb" data-url="${u}"><img src="${prox}" data-url="${u}" alt="uploaded"/><button class="delete-btn" data-url="${u}" title="${__('Delete image', 'woo-fitroom-preview')}"></button></div>`);
                                 }
                             });
                             // Pre-select first image
@@ -189,7 +189,7 @@
                 success: function(res){
                     if (res.success && res.data.images.length){
                         let html = '<div class="uploaded-images-grid">';
-                        res.data.images.forEach(u=>{ html += `<div class="img-item"><img src="${getProxyImageUrl(u)}"/></div>`; });
+                        res.data.images.forEach(u=>{ html += `<div class="img-item"><img src="${getProxyImageUrl(u)}" data-url="${u}"/><button class="delete-btn" data-url="${u}" title="${__('Delete image', 'woo-fitroom-preview')}"></button></div>`; });
                         html += '</div>';
                         let modal = document.getElementById('uploaded-images-modal');
                         if(!modal){
@@ -253,6 +253,128 @@
         $(document).on('click', '#my_uploads_more', function(){
             openUploadedImagesModal();
         });
+
+        // Handle delete button clicks
+        $(document).on('click', '.delete-btn', function(e){
+            e.stopPropagation(); // Prevent triggering image selection
+            const imageUrl = $(this).data('url');
+            showDeleteConfirmation(imageUrl);
+        });
+
+        // Delete confirmation popup functions
+        function showDeleteConfirmation(imageUrl) {
+            const popup = $(`
+                <div class="delete-confirmation-popup">
+                    <div class="delete-confirmation-content">
+                        <h3>${__('Delete Image', 'woo-fitroom-preview')}</h3>
+                        <p>${__('Are you sure you want to delete this image permanently?', 'woo-fitroom-preview')}</p>
+                        <div class="delete-confirmation-buttons">
+                            <button class="delete-cancel-btn">${__('Cancel', 'woo-fitroom-preview')}</button>
+                            <button class="delete-confirm-btn" data-url="${imageUrl}">${__('Delete', 'woo-fitroom-preview')}</button>
+                        </div>
+                    </div>
+                </div>
+            `);
+            
+            $('body').append(popup);
+            
+            // Handle cancel
+            popup.on('click', '.delete-cancel-btn', function(){
+                popup.remove();
+            });
+            
+            // Handle confirm
+            popup.on('click', '.delete-confirm-btn', function(){
+                const urlToDelete = $(this).data('url');
+                deleteImage(urlToDelete);
+                popup.remove();
+            });
+            
+            // Close on background click
+            popup.on('click', function(e){
+                if (e.target === this) {
+                    popup.remove();
+                }
+            });
+        }
+
+        // Delete image function
+        function deleteImage(imageUrl) {
+            console.log('Delete Image: Attempting to delete URL:', imageUrl);
+            $.ajax({
+                url: WooFitroomPreview.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'delete_user_uploaded_image',
+                    image_url: imageUrl,
+                    user_id: WooFitroomPreview.user_id,
+                    nonce: WooFitroomPreview.nonce
+                },
+                success: function(response) {
+                    console.log('Delete Image: Server response:', response);
+                    if (response.success) {
+                        // Remove the image from both inline strip and modal grid
+                        $(`.thumb[data-url="${imageUrl}"]`).remove();
+                        $(`.img-item img[data-url="${imageUrl}"]`).closest('.img-item').remove();
+                        
+                        // Refresh the inline strip if needed
+                        if (WooFitroomPreview.user_id && WooFitroomPreview.user_id !== 0) {
+                            refreshInlineStrip();
+                        }
+                        
+                        // Show success message
+                        alert(__('Image deleted successfully', 'woo-fitroom-preview'));
+                    } else {
+                        console.error('Delete Image: Server error:', response.data.message);
+                        alert(response.data.message || __('Failed to delete image', 'woo-fitroom-preview'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Delete Image: AJAX error:', {xhr, status, error});
+                    alert(__('Error communicating with server', 'woo-fitroom-preview'));
+                }
+            });
+        }
+
+        // Refresh inline strip after deletion
+        function refreshInlineStrip() {
+            $.ajax({
+                url: WooFitroomPreview.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'get_user_uploaded_images',
+                    user_id: WooFitroomPreview.user_id,
+                    nonce: WooFitroomPreview.nonce
+                },
+                success: function(res){
+                    if(res.success && res.data.images.length){
+                        const list = $('#my_uploads_list');
+                        const strip = $('#my_uploads_strip');
+                        strip.show();
+                        list.empty();
+                        const maxThumbs = 3;
+                        const images = res.data.images;
+                        const visible = images.slice(0, maxThumbs);
+                        visible.forEach((u, idx) => {
+                            const isLastAndMore = (idx === maxThumbs - 1) && (images.length > maxThumbs);
+                            if (isLastAndMore) {
+                                list.append(`<div class="thumb more" id="my_uploads_more"><span>${__('View More','woo-fitroom-preview')}</span></div>`);
+                            } else {
+                                const prox = getProxyImageUrl(u);
+                                list.append(`<div class="thumb" data-url="${u}"><img src="${prox}" data-url="${u}" alt="uploaded"/><button class="delete-btn" data-url="${u}" title="${__('Delete image', 'woo-fitroom-preview')}"></button></div>`);
+                            }
+                        });
+                        // Pre-select first image if available
+                        if (images.length > 0) {
+                            $('#saved_user_image_url').val(images[0]);
+                            list.find('.thumb').first().addClass('selected');
+                        }
+                    } else {
+                        $('#my_uploads_strip').hide();
+                    }
+                }
+            });
+        }
 
         // Handle form submission
         $('#woo-fitroom-preview-form').on('submit', function(e) {
@@ -350,11 +472,11 @@
                                     const prox = getProxyImageUrl(u);
                                     const list = $('#my_uploads_list');
                                     if (list.length) {
-                                        // Prepend and trim grid to 5 tiles (keeping "More" at the end if exists)
+                                        // Prepend and trim grid to 3 tiles (keeping "More" at the end if exists)
                                         list.prepend(`<div class="thumb" data-url="${u}"><img src="${prox}" alt="uploaded"/></div>`);
                                         // Remove any surplus thumbnails before the "more" tile
                                         const thumbs = list.find('.thumb:not(.more)');
-                                        if (thumbs.length > 5) {
+                                        if (thumbs.length > 3) {
                                             thumbs.last().remove();
                                         }
                                         // Ensure strip is visible for next regenerate session
@@ -571,35 +693,73 @@
 
         $('#woo-fitroom-preview-modal .preview-error').hide();
 
-        console.log('WooTryOnTool Debug: jQuery is available');
-        console.log('WooTryOnTool Debug: Document ready fired');
-        console.log('WooTryOnTool Debug: Button elements found:', $('.woo-tryontool-preview-button').length);
-        console.log('Debug Image Element:', imgElement);
-        console.log('Image src:', imgElement ? imgElement.src : 'No image element');
-        console.log('Image displayed:', imgElement ? window.getComputedStyle(imgElement).display : 'No image element');
-        console.log('Image width:', imgElement ? imgElement.offsetWidth : 'No image element');
-        console.log('Image complete:', imgElement ? imgElement.complete : 'No image element');
-        console.log('Forced image reload with:', imgElement.src);
-        console.log('Button Data Product ID:', $(this).data('product-id'));
-        console.log('Button Data Product Image:', $(this).data('product-image'));
-        console.log('WooTryOnTool Debug: Window load event fired');
-        console.log('WooTryOnTool Debug: Button found after page load');
-        console.log('WooTryOnTool Debug: Button NOT found after page load');
-        console.log('WooTryOnTool Debug: Modal found after page load');
-        console.log('WooTryOnTool Debug: Modal NOT found after page load');
+        try {
+            console.log('WooTryOnTool Debug: jQuery is available');
+            console.log('WooTryOnTool Debug: Document ready fired');
+            console.log('WooTryOnTool Debug: Button elements found:', $('.woo-tryontool-preview-button').length);
+            console.log('Debug Image Element:', imgElement);
+            console.log('Image src:', imgElement ? imgElement.src : 'No image element');
+            console.log('Image displayed:', imgElement ? window.getComputedStyle(imgElement).display : 'No image element');
+            console.log('Image width:', imgElement ? imgElement.offsetWidth : 'No image element');
+            console.log('Image complete:', imgElement ? imgElement.complete : 'No image element');
+            if (imgElement) {
+                console.log('Forced image reload with:', imgElement.src);
+            }
+            console.log('Button Data Product ID:', $(this).data('product-id'));
+            console.log('Button Data Product Image:', $(this).data('product-image'));
+            console.log('WooTryOnTool Debug: Window load event fired');
+            console.log('WooTryOnTool Debug: Button found after page load');
+            console.log('WooTryOnTool Debug: Button NOT found after page load');
+            console.log('WooTryOnTool Debug: Modal found after page load');
+            console.log('WooTryOnTool Debug: Modal NOT found after page load');
+        } catch (e) {
+            console.warn('WooTryOnTool Debug block skipped due to error:', e.message);
+        }
 
         // Hide legacy button (replaced by inline strip)
         $('#view-uploaded-images').hide();
 
-        $('#user_image').on('change', function(){
+        // Use delegated handler since modal can be injected after scripts
+        $(document).on('change input', '#user_image', function(){
             $('#saved_user_image_url').val('');
             // Reinstate the required attribute when a new file is chosen
             if (this.files && this.files.length) {
                 $(this).prop('required', true);
                 // Show chosen file name
                 $('#selected-photo-name').text( __( 'Selected photo:', 'woo-fitroom-preview' ) + ' ' + this.files[0].name );
+ 
+                // Replace dz-icon with a live thumbnail of the selected file
+                try {
+                    const file = this.files[0];
+                    const dropzone = jQuery(this).closest('.upload-dropzone');
+                    const dzInner = dropzone.find('.dz-inner').first();
+                    const dzIcon  = dzInner.find('.dz-icon').first();
+                    const dzThumb = dzInner.find('.dz-thumb').first();
+                    if (file && dzIcon.length && dzThumb.length) {
+                        // Immediately swap visibility for faster feedback
+                        dzIcon.attr('style','display:none !important');
+                        dzThumb.attr('style','display:block !important');
+                        dropzone.addClass('show-thumb');
+
+                        const reader = new FileReader();
+                        reader.onload = function(e){
+                            const dataUrl = e.target.result;
+                            dzThumb.attr('src', dataUrl).attr('style','display:block !important');
+                            dzIcon.attr('aria-hidden','true').removeClass('has-thumb').css({'background':'','background-image':'','background-size':'','background-position':''});
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                } catch(e) { /* no-op */ }
             } else {
                 $('#selected-photo-name').text('');
+                // No file selected: revert dz-icon to default icon
+                const dropzone = jQuery(this).closest('.upload-dropzone');
+                const dzInner = dropzone.find('.dz-inner').first();
+                const dzIcon  = dzInner.find('.dz-icon').first();
+                const dzThumb = dzInner.find('.dz-thumb').first();
+                dzThumb.attr('src','').css('display','none');
+                dropzone.removeClass('show-thumb');
+                dzIcon.css('display','').attr('aria-hidden','false');
             }
         });
 
@@ -614,31 +774,29 @@
             e.preventDefault();
             $('#user_image').trigger('click');
         });
-        const dz = $('#user_image_dropzone');
-        if (dz.length) {
-            // Make the whole box clickable and keyboard accessible
-            dz.attr('tabindex', '0').on('click', function(e){
-                // If the native input is present we can rely on it to open the dialog.
-                // Otherwise, trigger programmatically.
-                const input = document.getElementById('user_image');
-                if (!input || e.target === input) return; // native click already handled
-                if (!$(e.target).closest('.dz-browse').length) {
-                    $('#user_image').trigger('click');
-                }
-            }).on('keypress', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#user_image').trigger('click'); } });
-            dz.on('dragover dragenter', function(e){ e.preventDefault(); e.stopPropagation(); $(this).addClass('dragover'); });
-            dz.on('dragleave dragend drop', function(e){ e.preventDefault(); e.stopPropagation(); $(this).removeClass('dragover'); });
-            dz.on('drop', function(e){
-                const files = e.originalEvent.dataTransfer.files;
-                if (files && files.length) {
-                    const input = document.getElementById('user_image');
+        // Delegate dropzone interactions so they work after modal injection
+        $(document).on('click', '#user_image_dropzone', function(e){
+            const input = this.querySelector('#user_image');
+            if (!input || e.target === input) return;
+            if (!$(e.target).closest('.dz-browse').length) {
+                $('#user_image').trigger('click');
+            }
+        });
+        $(document).on('keypress', '#user_image_dropzone', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#user_image').trigger('click'); } });
+        $(document).on('dragover dragenter', '#user_image_dropzone', function(e){ e.preventDefault(); e.stopPropagation(); $(this).addClass('dragover'); });
+        $(document).on('dragleave dragend drop', '#user_image_dropzone', function(e){ e.preventDefault(); e.stopPropagation(); $(this).removeClass('dragover'); });
+        $(document).on('drop', '#user_image_dropzone', function(e){
+            const files = e.originalEvent && e.originalEvent.dataTransfer ? e.originalEvent.dataTransfer.files : null;
+            if (files && files.length) {
+                const input = this.querySelector('#user_image');
+                if (input) {
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(files[0]);
                     input.files = dataTransfer.files;
                     $('#user_image').trigger('change');
                 }
-            });
-        }
+            }
+        });
     });
 
     $(document).on('click', '#view-uploaded-images', function(e){

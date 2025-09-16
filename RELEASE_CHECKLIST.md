@@ -1,9 +1,9 @@
-﻿# Release Checklist - Version 1.2.0
+﻿# Release Checklist - Version 1.2.1
 
 ## Pre-Release Tasks
 
 ### âœ… Version Updates
-- [x] Update version in `woo-fitroom-preview.php` (1.2.0)
+- [x] Update version in `woo-fitroom-preview.php` (1.2.1)
 - [x] Update `WOO_FITROOM_PREVIEW_VERSION` constant
 - [x] Create/update `CHANGELOG.md`
 - [x] Update `README.md` with current version
@@ -35,7 +35,7 @@
 ## Release Tasks
 
 ### ðŸ“¦ Package Preparation
-- [ ] Create new zip file: `try-on_tool_plugin_v1.2.0.zip`
+- [ ] Create new zip file: `try-on_tool_plugin_v1.2.1.zip`
 - [ ] Ensure all files are included:
   - [ ] Main plugin file (`woo-fitroom-preview.php`)
   - [ ] All `includes/` classes
@@ -56,7 +56,7 @@
   - [ ] License headers in all source files
 
 ### ðŸ“‹ Distribution Files
-- [ ] `try-on_tool_plugin_v1.2.0.zip` (main plugin)
+- [ ] `try-on_tool_plugin_v1.2.1.zip` (main plugin)
 - [ ] `CHANGELOG.md` (release notes)
 - [ ] Updated documentation
 
@@ -69,7 +69,7 @@
 
 ### ðŸ”„ Version Management
 - [ ] Tag this version in version control (if using Git)
-- [ ] Create backup of v1.2.0 release files
+- [ ] Create backup of v1.2.1 release files
 - [ ] Prepare for next development cycle
 
 ## Git Release Workflow
@@ -81,20 +81,20 @@ git checkout main
 git pull origin main
 
 # Create release branch
-git checkout -b release/v1.2.0
+git checkout -b release/v1.2.1
 
 # Commit all changes
 git add .
-git commit -m "Prepare for v1.2.0 release"
+git commit -m "Prepare for v1.2.1 release"
 ```
 
 ### Step 2: Create Release Tag
 ```bash
 # Create annotated tag
-git tag -a v1.2.0 -m "Release version 1.2.0"
+git tag -a v1.2.1 -m "Release version 1.2.1"
 
 # Push tag to remote
-git push origin v1.2.0
+git push origin v1.2.1
 ```
 
 ### Step 3: Merge to Main
@@ -103,25 +103,33 @@ git push origin v1.2.0
 git checkout main
 
 # Merge release branch
-git merge release/v1.2.0
+git merge release/v1.2.1
 
 # Push to main
 git push origin main
 
 # Delete release branch (optional)
-git branch -d release/v1.2.0
-git push origin --delete release/v1.2.0
+git branch -d release/v1.2.1
+git push origin --delete release/v1.2.1
 ```
 
 ### Step 4: Create GitHub Release
 1. Go to GitHub repository
 2. Click "Releases" â†’ "Create a new release"
-3. Select the `v1.2.0` tag
-4. Add release title: "Try-On Tool v1.2.0"
+3. Select the `v1.2.1` tag
+4. Add release title: "Try-On Tool v1.2.1"
 5. Add release notes from CHANGELOG.md
-6. Upload the zip file: `try-on_tool_plugin_v1.2.0.zip`
+6. Upload the zip file: `try-on_tool_plugin_v1.2.1.zip`
 
 ## Release Notes Summary
+
+**Version 1.2.1**
+- **Added:** Image deletion functionality with confirmation popup
+- **Added:** HPOS (High-Performance Order Storage) compatibility
+- **Changed:** Grid layout from 5 to 3 columns for better mobile experience
+- **Fixed:** Image positioning and container overflow issues
+- **Fixed:** Upload dropzone theme color inheritance
+- **Fixed:** Mobile responsive design improvements
 
 **Version 1.2.0**
 - **Added:** Initial release of Try-On Tool plugin

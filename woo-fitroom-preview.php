@@ -23,7 +23,7 @@
 /**
  * Plugin Name: Try-On Tool
  * Description: Connect WooCommerce with Try-On Tool for AI-generated virtual try-on previews
- * Version: 1.2.0
+ * Version: 1.2.1
  * Author: DataDove
  * Text Domain: woo-fitroom-preview
  * Domain Path: /languages
@@ -40,6 +40,42 @@ if (!defined('WPINC')) {
     die;
 }
 
+// Declare HPOS compatibility
+add_action( 'before_woocommerce_init', function() {
+    if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+    }
+});
+
+// HPOS compatibility helper functions
+function fitroom_get_order_meta( $order_id, $key, $single = true ) {
+    $order = wc_get_order( $order_id );
+    if ( ! $order ) {
+        return false;
+    }
+    return $order->get_meta( $key, $single );
+}
+
+function fitroom_update_order_meta( $order_id, $key, $value ) {
+    $order = wc_get_order( $order_id );
+    if ( ! $order ) {
+        return false;
+    }
+    $order->update_meta_data( $key, $value );
+    $order->save();
+    return true;
+}
+
+function fitroom_delete_order_meta( $order_id, $key ) {
+    $order = wc_get_order( $order_id );
+    if ( ! $order ) {
+        return false;
+    }
+    $order->delete_meta_data( $key );
+    $order->save();
+    return true;
+}
+
 // BEGIN: Buffer output early to prevent BOM/header issues
 if ( ! ob_get_level() ) {
     ob_start();
@@ -53,7 +89,7 @@ if ( ! ob_get_level() ) {
 // END buffer setup
 
 // Define plugin constants
-define('WOO_FITROOM_PREVIEW_VERSION', '1.2.0');
+define('WOO_FITROOM_PREVIEW_VERSION', '1.2.1');
 define('WOO_FITROOM_PREVIEW_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WOO_FITROOM_PREVIEW_PLUGIN_URL', plugin_dir_url(__FILE__));
 // FitRoom relay endpoints

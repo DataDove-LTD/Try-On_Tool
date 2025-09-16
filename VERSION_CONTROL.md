@@ -9,7 +9,7 @@ We follow [Semantic Versioning](https://semver.org/) format: `MAJOR.MINOR.PATCH`
 - **MINOR** (1.0.x): New features, backward compatible
 - **PATCH** (1.0.1): Bug fixes, backward compatible
 
-### Current Version: 1.2.0
+### Current Version: 1.2.1
 - **Previous:** 1.1.0 (Feature release)
 - **Next Planned:** 1.3.0 (feature release)
 
@@ -31,7 +31,7 @@ git checkout main
 git pull origin main
 
 # Create release branch
-git checkout -b release/v1.2.0
+git checkout -b release/v1.2.1
 
 # Make version updates
 # - Update version in woo-fitroom-preview.php
@@ -40,7 +40,7 @@ git checkout -b release/v1.2.0
 
 # Commit changes
 git add .
-git commit -m "Prepare for v1.2.0 release"
+git commit -m "Prepare for v1.2.1 release"
 ```
 
 #### 2. Testing & Validation
@@ -53,10 +53,10 @@ git commit -m "Prepare for v1.2.0 release"
 #### 3. Create Release Tag
 ```bash
 # Create annotated tag
-git tag -a v1.2.0 -m "Release version 1.2.0"
+git tag -a v1.2.1 -m "Release version 1.2.1"
 
 # Push tag to remote
-git push origin v1.2.0
+git push origin v1.2.1
 ```
 
 #### 4. Merge to Main
@@ -65,31 +65,31 @@ git push origin v1.2.0
 git checkout main
 
 # Merge release branch
-git merge release/v1.2.0
+git merge release/v1.2.1
 
 # Push to main
 git push origin main
 
 # Delete release branch (optional)
-git branch -d release/v1.2.0
-git push origin --delete release/v1.2.0
+git branch -d release/v1.2.1
+git push origin --delete release/v1.2.1
 ```
 
 #### 5. Create GitHub Release
 1. Go to GitHub repository
 2. Click "Releases" â†’ "Create a new release"
-3. Select the `v1.2.0` tag
-4. Add release title: "Try-On Tool v1.2.0"
+3. Select the `v1.2.1` tag
+4. Add release title: "Try-On Tool v1.2.1"
 5. Add release notes from CHANGELOG.md
-6. Upload the zip file: `try-on_tool_plugin_v1.2.0.zip`
+6. Upload the zip file: `try-on_tool_plugin_v1.2.1.zip`
 
 ## Version Update Checklist
 
 ### Files to Update for Each Release
 
 #### 1. Main Plugin File (`woo-fitroom-preview.php`)
-- [ ] Update version in plugin header: `Version: 1.2.0`
-- [ ] Update constant: `define('WOO_FITROOM_PREVIEW_VERSION', '1.2.0');`
+- [ ] Update version in plugin header: `Version: 1.2.1`
+- [ ] Update constant: `define('WOO_FITROOM_PREVIEW_VERSION', '1.2.1');`
 - [ ] Update modification date comment
 
 #### 2. Documentation Files
@@ -139,13 +139,13 @@ git push origin main
 ### Tagging
 ```bash
 # Create annotated tag
-git tag -a v1.2.0 -m "Release version 1.2.0"
+git tag -a v1.2.1 -m "Release version 1.2.1"
 
 # List tags
 git tag -l
 
 # Push specific tag
-git push origin v1.2.0
+git push origin v1.2.1
 
 # Push all tags
 git push origin --tags
@@ -172,7 +172,8 @@ git push origin --delete feature/new-feature
 |---------|------|------|-------------|
 | 1.0.0 | 2025-08-07 | Initial | Initial release |
 | 1.1.0 | 2025-08-12 | Minor | Feature improvements |
-| 1.2.0 | 2025-09-10 | Minor | Feature improvements & fixes |
+| 1.2.0 | 2025-09-08 | Minor | Feature improvements & fixes |
+| 1.2.1 | 2025-09-15 | Patch | Bug fixes & HPOS compatibility |
 
 ## Next Release Planning
 

@@ -154,8 +154,8 @@ class WooFitroomPreview_Settings {
     public function add_settings_page() {
         add_submenu_page(
             'woocommerce',
-            __('Try-On Tool Preview Settings', 'woo-fitroom-preview'),
-            __('Try-On Tool Preview', 'woo-fitroom-preview'),
+            __('Try-On Tool Settings', 'woo-fitroom-preview'),
+            __('Try-On Tool', 'woo-fitroom-preview'),
             'manage_options',
             'woo-fitroom-preview',
             array($this, 'render_settings_page')

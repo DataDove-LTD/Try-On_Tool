@@ -37,7 +37,7 @@
                <tr>
                    <th scope="row">
                        <label for="WOO_FITROOM_preview_enabled">
-                           <?php _e('Enable Try-On Tool Preview', 'woo-fitroom-preview'); ?>
+                           <?php _e('Enable Try-On Tool', 'woo-fitroom-preview'); ?>
                        </label>
                    </th>
                    <td>
@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function () {
    </div>
 
    <p style="margin-top:2em;font-size:smaller;">
-       Try-On Tool is Free Software, licensed under the GNU GPL v2” NO WARRANTY. 
+       Try-On Tool is Free Software, licensed under the GNU GPL v2. NO WARRANTY. 
        <a href="<?php echo plugin_dir_url( dirname( dirname( __FILE__ ) ) ); ?>COPYING.txt" target="_blank">View License</a>
    </p>
    
