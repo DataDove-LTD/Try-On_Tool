@@ -5,6 +5,46 @@ All notable changes to the Try-On Tool plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2025-09-24
+### Added
+- Enhanced theme compatibility system for Astra, OceanWP, GeneratePress, and Storefront
+- OceanWP comprehensive styling detection (padding, border, typography, shadows)
+- GeneratePress customizer color forcing to override WooCommerce defaults
+- Improved admin settings text with "Try-On Tool defined" terminology
+- Enhanced CSS specificity system for better theme integration
+
+### Changed
+- Admin settings text updated for better clarity:
+  - "Use Try-On Tool defined color or your custom color"
+  - "Use Try-On Tool defined border radius (50px) or your own custom"
+- CSS variable priority system improved (custom → theme → default)
+- JavaScript function priority updated (admin settings over theme detection)
+- Removed !important declarations that interfered with dynamic theme detection
+
+### Fixed
+- OceanWP primary color detection now uses correct CSS variable (--ocean-primary)
+- GeneratePress customizer colors now properly override WooCommerce purple defaults
+- CSS specificity issues resolved for better theme integration
+- Theme detection algorithms optimized for supported themes
+- **Plugin Update Conflict**: Fixed issue where manual upload of v1.2.2 over v1.2.1 caused WordPress to treat them as separate plugins
+- **WordPress Update Integration**: Added proper plugin headers and hooks for WordPress to recognize updates properly
+- **Update Screen**: WordPress now shows the standard update screen with version comparison and "Replace current with uploaded" option
+- **Fatal Error Prevention**: Added class and function existence checks to prevent conflicts during manual updates
+- **Multiple Version Detection**: Added admin notice when multiple plugin versions are detected
+- **Update Notifications**: Added success notice when plugin is successfully updated
+- **Fatal Error Prevention**: Added comprehensive constant and class existence checks
+- **Cleanup Mechanism**: Added automatic cleanup of old version conflicts during activation
+- **Cleanup Script**: Created `cleanup-old-version.php` for manual conflict resolution
+- **Syntax Error Fix**: Fixed duplicate function declaration causing fatal error
+- **Version Folder Support**: Added support for version numbers in folder names
+- **Plugin Identifier System**: Implemented identifier-based plugin detection
+
+### Technical
+- Enhanced OceanWP detection to extract comprehensive styling from Add to Cart button
+- Added GeneratePress-specific detection method with priority system
+- Improved CSS variable fallback hierarchy
+- Streamlined theme compatibility to focus on key themes (Astra, GeneratePress, OceanWP, Storefront)
+
 ## [1.2.1] - 2025-09-15
 ### Added
 - Image deletion functionality with confirmation popup

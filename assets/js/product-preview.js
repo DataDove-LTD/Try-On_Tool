@@ -31,9 +31,668 @@
      * ------------------------------------------------------------ */
     const { __ } = ( window.wp && wp.i18n ) ? wp.i18n : { __: ( s ) => s };
 
+    /* --------------------------------------------------------------
+     *  Enhanced Theme Color Detection Function
+     * ------------------------------------------------------------ */
+    function detectAndApplyThemeColors() {
+        console.log('Try-On Tool: Starting theme color detection...');
+        
+        // Get all try-on buttons
+        const buttons = document.querySelectorAll('.woo-fitroom-preview-button');
+        if (buttons.length === 0) return;
+
+        // Check if custom color is enabled
+        const useCustomColor = WooFitroomPreview && WooFitroomPreview.use_custom_color === '0';
+        
+        if (useCustomColor && WooFitroomPreview.custom_color) {
+            // Apply custom color
+            const customColor = WooFitroomPreview.custom_color;
+            const customColors = {
+                primary: customColor,
+                primaryHover: darkenColor(customColor, 20),
+                text: '#ffffff',
+                textHover: '#ffffff',
+                border: customColor,
+                borderHover: darkenColor(customColor, 20),
+                borderRadius: '3px',
+                padding: '12px 20px',
+                fontSize: '14px',
+                fontWeight: '600'
+            };
+            
+            buttons.forEach(button => {
+                applyCustomColorsToButton(button, customColors);
+            });
+            
+            console.log('Try-On Tool: Custom colors applied:', customColors);
+        } else {
+            // For OceanWP, wait a bit for the Add to Cart button to be available
+            const isOceanWP = document.body.classList.contains('oceanwp') || 
+                             document.documentElement.classList.contains('oceanwp') ||
+                             document.body.classList.contains('oceanwp-theme') ||
+                             document.querySelector('link[href*="oceanwp"]') ||
+                             document.querySelector('script[src*="oceanwp"]');
+            
+            if (isOceanWP && !document.querySelector('.single_add_to_cart_button')) {
+                console.log('Try-On Tool: OceanWP detected but Add to Cart button not ready, retrying in 500ms...');
+                setTimeout(() => {
+                    detectAndApplyThemeColors();
+                }, 500);
+                return;
+            }
+            
+            // Detect theme and get primary color
+            const themeColors = detectThemeColors();
+            
+            // Apply colors to all buttons
+            buttons.forEach(button => {
+                applyThemeColorsToButton(button, themeColors);
+            });
+
+            // Apply colors to modal
+            const modalRoot = document.getElementById('woo-fitroom-preview-modal');
+            if (modalRoot) {
+                applyThemeColorsToModal(modalRoot, themeColors);
+            }
+
+            console.log('Try-On Tool: Theme colors applied:', themeColors);
+        }
+    }
+
+    function detectThemeColors() {
+        const colors = {
+            primary: null,
+            primaryHover: null,
+            text: '#ffffff',
+            textHover: '#ffffff',
+            border: null,
+            borderHover: null,
+            borderRadius: '50px', // Try-On Tool default border radius
+            fontSize: '14px',
+            fontWeight: '600'
+        };
+
+        // Method 0: OceanWP specific detection - get comprehensive styling from Add to Cart button
+        const isOceanWP = document.body.classList.contains('oceanwp') || 
+                         document.documentElement.classList.contains('oceanwp') ||
+                         document.body.classList.contains('oceanwp-theme') ||
+                         document.querySelector('link[href*="oceanwp"]') ||
+                         document.querySelector('script[src*="oceanwp"]');
+        
+        if (isOceanWP) {
+            console.log('Try-On Tool: OceanWP theme detected, getting comprehensive styling from Add to Cart button...');
+            
+            // Find the Add to Cart button and get its comprehensive styling
+            const addToCartButton = document.querySelector('.single_add_to_cart_button');
+            if (addToCartButton) {
+                const computedStyle = getComputedStyle(addToCartButton);
+                
+                // Get background color
+                const bgColor = computedStyle.backgroundColor;
+                if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+                    colors.primary = bgColor;
+                    colors.primaryHover = darkenColor(bgColor, 20);
+                    colors.border = bgColor;
+                    colors.borderHover = darkenColor(bgColor, 20);
+                    
+                    console.log('Try-On Tool: OceanWP primary color detected:', bgColor);
+                }
+                
+                // Get text color
+                const textColor = computedStyle.color;
+                if (textColor && textColor !== 'rgba(0, 0, 0, 0)') {
+                    colors.text = textColor;
+                    colors.textHover = textColor;
+                    console.log('Try-On Tool: OceanWP text color detected:', textColor);
+                }
+                
+                // Get border radius - always get value even if 0
+                const borderRadius = computedStyle.borderRadius;
+                colors.borderRadius = borderRadius; // Always set, even if 0px
+                console.log('Try-On Tool: OceanWP border radius detected:', borderRadius);
+                
+                // Get font size
+                const fontSize = computedStyle.fontSize;
+                if (fontSize && fontSize !== '0px') {
+                    colors.fontSize = fontSize;
+                    console.log('Try-On Tool: OceanWP font size detected:', fontSize);
+                }
+                
+                // Get font weight
+                const fontWeight = computedStyle.fontWeight;
+                if (fontWeight && fontWeight !== 'normal') {
+                    colors.fontWeight = fontWeight;
+                    console.log('Try-On Tool: OceanWP font weight detected:', fontWeight);
+                }
+                
+                // Get padding (comprehensive detection) - always get values even if 0
+                const paddingTop = computedStyle.paddingTop;
+                const paddingRight = computedStyle.paddingRight;
+                const paddingBottom = computedStyle.paddingBottom;
+                const paddingLeft = computedStyle.paddingLeft;
+                
+                // Always set padding values from OceanWP Add to Cart button (even if 0)
+                colors.padding = `${paddingTop} ${paddingRight} ${paddingBottom} ${paddingLeft}`;
+                colors.paddingTop = paddingTop;
+                colors.paddingRight = paddingRight;
+                colors.paddingBottom = paddingBottom;
+                colors.paddingLeft = paddingLeft;
+                console.log('Try-On Tool: OceanWP padding detected:', colors.padding);
+                
+                // Get border width
+                const borderWidth = computedStyle.borderWidth;
+                if (borderWidth && borderWidth !== '0px') {
+                    colors.borderWidth = borderWidth;
+                    console.log('Try-On Tool: OceanWP border width detected:', borderWidth);
+                }
+                
+                // Get border style
+                const borderStyle = computedStyle.borderStyle;
+                if (borderStyle && borderStyle !== 'none') {
+                    colors.borderStyle = borderStyle;
+                    console.log('Try-On Tool: OceanWP border style detected:', borderStyle);
+                }
+                
+                // Get text transform
+                const textTransform = computedStyle.textTransform;
+                if (textTransform && textTransform !== 'none') {
+                    colors.textTransform = textTransform;
+                    console.log('Try-On Tool: OceanWP text transform detected:', textTransform);
+                }
+                
+                // Get letter spacing
+                const letterSpacing = computedStyle.letterSpacing;
+                if (letterSpacing && letterSpacing !== 'normal') {
+                    colors.letterSpacing = letterSpacing;
+                    console.log('Try-On Tool: OceanWP letter spacing detected:', letterSpacing);
+                }
+                
+                // Get line height
+                const lineHeight = computedStyle.lineHeight;
+                if (lineHeight && lineHeight !== 'normal') {
+                    colors.lineHeight = lineHeight;
+                    console.log('Try-On Tool: OceanWP line height detected:', lineHeight);
+                }
+                
+                // Get box shadow
+                const boxShadow = computedStyle.boxShadow;
+                if (boxShadow && boxShadow !== 'none') {
+                    colors.boxShadow = boxShadow;
+                    console.log('Try-On Tool: OceanWP box shadow detected:', boxShadow);
+                }
+                
+                console.log('Try-On Tool: OceanWP comprehensive styling applied:', colors);
+            } else {
+                console.log('Try-On Tool: Add to Cart button not found for OceanWP, falling back to CSS variables');
+            }
+        }
+
+        // Method 1: WordPress theme.json colors
+        const wpPrimary = getComputedStyle(document.body).getPropertyValue('--wp--preset--color--primary').trim();
+        const wpSecondary = getComputedStyle(document.body).getPropertyValue('--wp--preset--color--secondary').trim();
+        
+        if (wpPrimary && /rgb|#/.test(wpPrimary)) {
+            colors.primary = wpPrimary;
+            colors.primaryHover = darkenColor(wpPrimary, 20);
+            colors.border = wpPrimary;
+            colors.borderHover = darkenColor(wpPrimary, 20);
+        } else if (wpSecondary && /rgb|#/.test(wpSecondary)) {
+            colors.primary = wpSecondary;
+            colors.primaryHover = darkenColor(wpSecondary, 20);
+            colors.border = wpSecondary;
+            colors.borderHover = darkenColor(wpSecondary, 20);
+        }
+
+        // Method 2: GeneratePress specific detection - force customizer color over WooCommerce
+        const isGeneratePress = document.body.classList.contains('generatepress') || 
+                               document.documentElement.classList.contains('generatepress') ||
+                               document.body.classList.contains('gp-theme') ||
+                               document.querySelector('link[href*="generatepress"]') ||
+                               document.querySelector('script[src*="generatepress"]');
+        
+        if (isGeneratePress) {
+            console.log('Try-On Tool: GeneratePress theme detected, forcing customizer primary color...');
+            
+            // Force GeneratePress customizer primary color
+            const gpPrimary = getComputedStyle(document.body).getPropertyValue('--gp-theme-primary').trim();
+            if (gpPrimary && /rgb|#/.test(gpPrimary)) {
+                colors.primary = gpPrimary;
+                colors.primaryHover = darkenColor(gpPrimary, 20);
+                colors.border = gpPrimary;
+                colors.borderHover = darkenColor(gpPrimary, 20);
+                console.log('Try-On Tool: GeneratePress customizer primary color forced:', gpPrimary);
+            }
+        }
+
+        // Method 3: Theme-specific CSS variables (fallback)
+        if (!colors.primary) {
+            const themeVars = [
+                '--ast-global-color-0', // Astra
+                '--gp-theme-primary', // GeneratePress
+                '--ocean-primary-color', // OceanWP (primary variable)
+                '--ocean-primary', // OceanWP (alternative)
+                '--ocean-color-primary', // OceanWP (alternative)
+                '--storefront-primary' // Storefront
+            ];
+
+            for (const varName of themeVars) {
+                const color = getComputedStyle(document.body).getPropertyValue(varName).trim();
+                if (color && /rgb|#/.test(color)) {
+                    colors.primary = color;
+                    colors.primaryHover = darkenColor(color, 20);
+                    colors.border = color;
+                    colors.borderHover = darkenColor(color, 20);
+                    console.log('Try-On Tool: Detected color from CSS variable', varName, ':', color);
+                    break;
+                }
+            }
+        }
+
+        // Method 4: Detect from existing buttons (prioritize WooCommerce buttons)
+        if (!colors.primary) {
+            // First try WooCommerce specific buttons
+            const wooButtons = document.querySelectorAll('.single_add_to_cart_button, .add_to_cart_button, .woocommerce-button');
+            for (const btn of wooButtons) {
+                const bgColor = getComputedStyle(btn).backgroundColor;
+                if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+                    colors.primary = bgColor;
+                    colors.primaryHover = darkenColor(bgColor, 20);
+                    colors.border = bgColor;
+                    colors.borderHover = darkenColor(bgColor, 20);
+                    
+                    console.log('Try-On Tool: Detected color from WooCommerce button:', bgColor);
+                    
+                    // Get text color
+                    const textColor = getComputedStyle(btn).color;
+                    if (textColor && textColor !== 'rgba(0, 0, 0, 0)') {
+                        colors.text = textColor;
+                        colors.textHover = textColor;
+                    }
+                    
+                    // Get border radius
+                    const borderRadius = getComputedStyle(btn).borderRadius;
+                    if (borderRadius && borderRadius !== '0px') {
+                        colors.borderRadius = borderRadius;
+                    }
+                    
+                    // Get font size
+                    const fontSize = getComputedStyle(btn).fontSize;
+                    if (fontSize && fontSize !== '0px') {
+                        colors.fontSize = fontSize;
+                    }
+                    
+                    // Get font weight
+                    const fontWeight = getComputedStyle(btn).fontWeight;
+                    if (fontWeight && fontWeight !== 'normal') {
+                        colors.fontWeight = fontWeight;
+                    }
+                    
+                    break;
+                }
+            }
+            
+            // If no WooCommerce button found, try generic buttons
+            if (!colors.primary) {
+                const genericButtons = document.querySelectorAll('.button, .btn');
+                for (const btn of genericButtons) {
+                    const bgColor = getComputedStyle(btn).backgroundColor;
+                    if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+                        colors.primary = bgColor;
+                        colors.primaryHover = darkenColor(bgColor, 20);
+                        colors.border = bgColor;
+                        colors.borderHover = darkenColor(bgColor, 20);
+                        
+                        console.log('Try-On Tool: Detected color from generic button:', bgColor);
+                        
+                        // Get text color
+                        const textColor = getComputedStyle(btn).color;
+                        if (textColor && textColor !== 'rgba(0, 0, 0, 0)') {
+                            colors.text = textColor;
+                            colors.textHover = textColor;
+                        }
+                        
+                        // Get border radius
+                        const borderRadius = getComputedStyle(btn).borderRadius;
+                        if (borderRadius && borderRadius !== '0px') {
+                            colors.borderRadius = borderRadius;
+                        }
+                        
+                        // Get font size
+                        const fontSize = getComputedStyle(btn).fontSize;
+                        if (fontSize && fontSize !== '0px') {
+                            colors.fontSize = fontSize;
+                        }
+                        
+                        // Get font weight
+                        const fontWeight = getComputedStyle(btn).fontWeight;
+                        if (fontWeight && fontWeight !== 'normal') {
+                            colors.fontWeight = fontWeight;
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Method 5: Detect from links
+        if (!colors.primary) {
+            const links = document.querySelectorAll('a');
+            for (const link of links) {
+                const linkColor = getComputedStyle(link).color;
+                if (linkColor && /rgb|#/.test(linkColor) && linkColor !== 'rgb(0, 0, 0)') {
+                    colors.primary = linkColor;
+                    colors.primaryHover = darkenColor(linkColor, 20);
+                    colors.border = linkColor;
+                    colors.borderHover = darkenColor(linkColor, 20);
+                    break;
+                }
+            }
+        }
+
+        // Method 6: Create test element
+        if (!colors.primary) {
+            const testEl = document.createElement('a');
+            testEl.href = '#';
+            testEl.style.position = 'absolute';
+            testEl.style.visibility = 'hidden';
+            testEl.style.top = '-9999px';
+            document.body.appendChild(testEl);
+            
+            const linkColor = getComputedStyle(testEl).color;
+            if (linkColor && /rgb|#/.test(linkColor)) {
+                colors.primary = linkColor;
+                colors.primaryHover = darkenColor(linkColor, 20);
+                colors.border = linkColor;
+                colors.borderHover = darkenColor(linkColor, 20);
+            }
+            
+            document.body.removeChild(testEl);
+        }
+
+        // Fallback
+        if (!colors.primary) {
+            colors.primary = '#007cba';
+            colors.primaryHover = '#005a87';
+            colors.border = '#007cba';
+            colors.borderHover = '#005a87';
+        }
+
+        return colors;
+    }
+
+    function applyThemeColorsToButton(button, colors) {
+        // Set CSS custom properties
+        button.style.setProperty('--tryon-theme-bg', colors.primary);
+        button.style.setProperty('--tryon-theme-bg-hover', colors.primaryHover);
+        button.style.setProperty('--tryon-theme-text', colors.text);
+        button.style.setProperty('--tryon-theme-text-hover', colors.textHover);
+        button.style.setProperty('--tryon-theme-border', colors.border);
+        button.style.setProperty('--tryon-theme-border-hover', colors.borderHover);
+        button.style.setProperty('--tryon-theme-radius', colors.borderRadius);
+        button.style.setProperty('--tryon-theme-font-size', colors.fontSize);
+        button.style.setProperty('--tryon-theme-font-weight', colors.fontWeight);
+        button.style.setProperty('--tryon-theme-focus', colors.primary);
+        
+        // Apply comprehensive OceanWP styling if available
+        if (colors.padding !== undefined) {
+            button.style.setProperty('--tryon-theme-padding', colors.padding);
+            button.style.setProperty('--tryon-theme-padding-top', colors.paddingTop);
+            button.style.setProperty('--tryon-theme-padding-right', colors.paddingRight);
+            button.style.setProperty('--tryon-theme-padding-bottom', colors.paddingBottom);
+            button.style.setProperty('--tryon-theme-padding-left', colors.paddingLeft);
+        }
+        
+        if (colors.borderWidth) {
+            button.style.setProperty('--tryon-theme-border-width', colors.borderWidth);
+        }
+        
+        if (colors.borderStyle) {
+            button.style.setProperty('--tryon-theme-border-style', colors.borderStyle);
+        }
+        
+        if (colors.textTransform) {
+            button.style.setProperty('--tryon-theme-text-transform', colors.textTransform);
+        }
+        
+        if (colors.letterSpacing) {
+            button.style.setProperty('--tryon-theme-letter-spacing', colors.letterSpacing);
+        }
+        
+        if (colors.lineHeight) {
+            button.style.setProperty('--tryon-theme-line-height', colors.lineHeight);
+        }
+        
+        if (colors.boxShadow) {
+            button.style.setProperty('--tryon-theme-box-shadow', colors.boxShadow);
+        }
+        
+        // Apply padding and border radius based on admin settings
+        applyButtonPadding(button);
+        applyButtonBorderRadius(button);
+    }
+
+    function applyCustomColorsToButton(button, colors) {
+        // Set CSS custom properties for custom color
+        button.style.setProperty('--tryon-custom-color', colors.primary);
+        button.style.setProperty('--tryon-custom-color-hover', colors.primaryHover);
+        button.style.setProperty('--tryon-theme-bg', colors.primary);
+        button.style.setProperty('--tryon-theme-bg-hover', colors.primaryHover);
+        button.style.setProperty('--tryon-theme-text', colors.text);
+        button.style.setProperty('--tryon-theme-text-hover', colors.textHover);
+        button.style.setProperty('--tryon-theme-border', colors.border);
+        button.style.setProperty('--tryon-theme-border-hover', colors.borderHover);
+        button.style.setProperty('--tryon-theme-radius', colors.borderRadius);
+        // Padding is handled separately by applyButtonPadding()
+        button.style.setProperty('--tryon-theme-font-size', colors.fontSize);
+        button.style.setProperty('--tryon-theme-font-weight', colors.fontWeight);
+        button.style.setProperty('--tryon-theme-focus', colors.primary);
+        
+        // Apply padding and border radius based on admin settings
+        applyButtonPadding(button);
+        applyButtonBorderRadius(button);
+    }
+
+    function applyThemeColorsToModal(modal, colors) {
+        modal.style.setProperty('--tryon-primary', colors.primary);
+        modal.style.setProperty('--tryon-primary-20', colors.primary + '20');
+        modal.style.setProperty('--tryon-primary-25', colors.primary + '25');
+    }
+
+    function darkenColor(color, percent) {
+        // Convert hex to RGB
+        let r, g, b;
+        if (color.startsWith('#')) {
+            const hex = color.slice(1);
+            r = parseInt(hex.substr(0, 2), 16);
+            g = parseInt(hex.substr(2, 2), 16);
+            b = parseInt(hex.substr(4, 2), 16);
+        } else if (color.startsWith('rgb')) {
+            const matches = color.match(/\d+/g);
+            r = parseInt(matches[0]);
+            g = parseInt(matches[1]);
+            b = parseInt(matches[2]);
+        } else {
+            return color;
+        }
+
+        // Darken by percent
+        r = Math.max(0, Math.floor(r * (1 - percent / 100)));
+        g = Math.max(0, Math.floor(g * (1 - percent / 100)));
+        b = Math.max(0, Math.floor(b * (1 - percent / 100)));
+
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    // Custom Popup System
+    function showCustomPopup(options) {
+        const {
+            title = 'Notice',
+            message = '',
+            type = 'info', // info, success, error, warning
+            showCancel = false,
+            confirmText = 'OK',
+            cancelText = 'Cancel',
+            onConfirm = null,
+            onCancel = null
+        } = options;
+
+        // Remove any existing popup
+        $('.tryon-custom-popup').remove();
+
+        const popup = $(`
+            <div class="tryon-custom-popup">
+                <div class="tryon-popup-overlay"></div>
+                <div class="tryon-popup-content">
+                    <div class="tryon-popup-header">
+                        <h3 class="tryon-popup-title">${title}</h3>
+                        <button class="tryon-popup-close">&times;</button>
+                    </div>
+                    <div class="tryon-popup-body">
+                        <div class="tryon-popup-icon tryon-popup-icon-${type}"></div>
+                        <p class="tryon-popup-message">${message}</p>
+                    </div>
+                    <div class="tryon-popup-footer">
+                        ${showCancel ? `<button class="tryon-popup-btn tryon-popup-cancel">${cancelText}</button>` : ''}
+                        <button class="tryon-popup-btn tryon-popup-confirm tryon-popup-btn-${type}">${confirmText}</button>
+                    </div>
+                </div>
+            </div>
+        `);
+
+        $('body').append(popup);
+
+        // Handle close button
+        popup.find('.tryon-popup-close, .tryon-popup-cancel').on('click', function() {
+            popup.remove();
+            if (onCancel) onCancel();
+        });
+
+        // Handle confirm button
+        popup.find('.tryon-popup-confirm').on('click', function() {
+            popup.remove();
+            if (onConfirm) onConfirm();
+        });
+
+        // Handle overlay click
+        popup.find('.tryon-popup-overlay').on('click', function() {
+            popup.remove();
+            if (onCancel) onCancel();
+        });
+
+        // Auto-close for info/success messages after 3 seconds
+        if (type === 'info' || type === 'success') {
+            setTimeout(() => {
+                if (popup.length) {
+                    popup.remove();
+                }
+            }, 3000);
+        }
+    }
+
+    // Convenience functions for different popup types
+    function showInfoPopup(message, title = 'Information') {
+        showCustomPopup({ title, message, type: 'info' });
+    }
+
+    function showSuccessPopup(message, title = 'Success') {
+        showCustomPopup({ title, message, type: 'success' });
+    }
+
+    function showErrorPopup(message, title = 'Error') {
+        showCustomPopup({ title, message, type: 'error' });
+    }
+
+    function showConfirmPopup(message, onConfirm, title = 'Confirm') {
+        showCustomPopup({
+            title,
+            message,
+            type: 'warning',
+            showCancel: true,
+            confirmText: 'Yes',
+            cancelText: 'No',
+            onConfirm,
+            onCancel: () => {}
+        });
+    }
+
+    function applyButtonPadding(button) {
+        // Check if we should use custom padding or theme-detected padding
+        const useCustomPadding = WooFitroomPreview && WooFitroomPreview.use_custom_padding === '0';
+        
+        if (useCustomPadding && WooFitroomPreview.custom_padding) {
+            // Apply custom padding values from admin settings
+            const padding = WooFitroomPreview.custom_padding;
+            button.style.setProperty('--tryon-custom-padding', `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`);
+        } else {
+            // Check if theme-detected padding is available (OceanWP, etc.)
+            const themePadding = button.style.getPropertyValue('--tryon-theme-padding');
+            if (themePadding) {
+                // Use theme-detected padding (OceanWP Add to Cart button padding)
+                button.style.setProperty('--tryon-custom-padding', themePadding);
+                console.log('Try-On Tool: Using theme-detected padding:', themePadding);
+            } else {
+                // Use Try-On Tool default padding (12px top/bottom, 20px left/right)
+                button.style.setProperty('--tryon-custom-padding', '12px 20px');
+                console.log('Try-On Tool: Using default padding: 12px 20px');
+            }
+        }
+    }
+
+    function applyButtonBorderRadius(button) {
+        // Check if we should use Try-On Tool defined border radius or theme border radius
+        const useCustomBorderRadius = WooFitroomPreview && WooFitroomPreview.use_custom_border_radius === '0';
+        
+        if (useCustomBorderRadius) {
+            if (WooFitroomPreview.custom_border_radius) {
+                // Apply custom border radius values from admin settings
+                const radius = WooFitroomPreview.custom_border_radius;
+                button.style.setProperty('--tryon-custom-border-radius', `${radius.top_left}px ${radius.top_right}px ${radius.bottom_right}px ${radius.bottom_left}px`);
+                console.log('Try-On Tool: Using custom border radius from admin settings');
+            } else {
+                // Apply Try-On Tool default border radius (50px)
+                button.style.setProperty('--tryon-custom-border-radius', '50px');
+                console.log('Try-On Tool: Using Try-On Tool defined border radius (50px)');
+            }
+        } else {
+            // Check if theme-detected border radius is available (OceanWP, etc.)
+            const themeBorderRadius = button.style.getPropertyValue('--tryon-theme-radius');
+            if (themeBorderRadius) {
+                // Use theme-detected border radius (OceanWP Add to Cart button border radius)
+                button.style.setProperty('--tryon-custom-border-radius', themeBorderRadius);
+                console.log('Try-On Tool: Using theme-detected border radius:', themeBorderRadius);
+            } else {
+                // Clear custom border radius to use CSS defaults
+                button.style.setProperty('--tryon-custom-border-radius', '');
+                console.log('Try-On Tool: Using CSS default border radius');
+            }
+        }
+    }
+
     $(document).ready(function() {
         // Declare variable in outer scope to avoid ReferenceError in later debug logs
         let imgElement = null;
+        
+        // Apply theme colors on page load
+        setTimeout(() => {
+            detectAndApplyThemeColors();
+        }, 100);
+        
+        // Additional OceanWP detection after page is fully loaded
+        window.addEventListener('load', function() {
+            const isOceanWP = document.body.classList.contains('oceanwp') || 
+                             document.documentElement.classList.contains('oceanwp') ||
+                             document.body.classList.contains('oceanwp-theme') ||
+                             document.querySelector('link[href*="oceanwp"]') ||
+                             document.querySelector('script[src*="oceanwp"]');
+            
+            if (isOceanWP) {
+                console.log('Try-On Tool: OceanWP detected on window load, re-checking colors...');
+                setTimeout(() => {
+                    detectAndApplyThemeColors();
+                }, 200);
+            }
+        });
 
         console.log('WooTryOnTool Preview: JavaScript initialized');
         console.log('WooTryOnTool Preview Buttons found:', $('.woo-fitroom-preview-button').length);
@@ -53,39 +712,11 @@
             
             $('#woo-fitroom-preview-modal').addClass('is-open').show();
 
-            // Try to detect theme primary color and apply to modal as CSS var --tryon-primary
+            // Enhanced theme color detection and button styling
             try {
-                // 1st: Try global theme CSS variable if exposed by WP theme.json
-                let primary = getComputedStyle(document.body).getPropertyValue('--wp--preset--color--primary').trim();
-
-                // 2nd: Try secondary token
-                if(!primary){
-                    primary = getComputedStyle(document.body).getPropertyValue('--wp--preset--color--secondary').trim();
-                }
-
-                // 3rd: Fallback to link colour detected from a dummy anchor
-                if(!primary){
-                    const testEl = document.createElement('a');
-                    testEl.href = '#';
-                    document.body.appendChild(testEl);
-                    primary = getComputedStyle(testEl).color;
-                    document.body.removeChild(testEl);
-                }
-                // 4th: hard default if everything else fails
-                if (!primary || !/rgb|#/.test(primary)) {
-                    primary = '#F4BD7A';
-                }
-                const modalRoot = document.getElementById('woo-fitroom-preview-modal');
-                if (modalRoot && primary) {
-                    // Only override if not already customised
-                    const existing = modalRoot.style.getPropertyValue('--tryon-primary');
-                    if (!existing) {
-                        modalRoot.style.setProperty('--tryon-primary', primary.trim());
-                    }
-                }
-            } catch (_) {
-                const modalRoot = document.getElementById('woo-fitroom-preview-modal');
-                if (modalRoot) { modalRoot.style.setProperty('--tryon-primary', '#FB5607'); }
+                detectAndApplyThemeColors();
+            } catch (error) {
+                console.warn('Theme color detection failed:', error);
             }
             
             // Hide consent blocks up-front if the server says they are not needed for this user
@@ -122,7 +753,7 @@
                                     list.append(`<div class="thumb more" id="my_uploads_more"><span>${__('View More','woo-fitroom-preview')}</span></div>`);
                                 } else {
                                     const prox = getProxyImageUrl(u);
-                                    list.append(`<div class="thumb" data-url="${u}"><img src="${prox}" data-url="${u}" alt="uploaded"/><button class="delete-btn" data-url="${u}" title="${__('Delete image', 'woo-fitroom-preview')}"></button></div>`);
+                                    list.append(`<div class="thumb" data-url="${u}"><img src="${prox}" data-url="${u}" alt="uploaded"/><button class="delete-btn tryon-delete-btn" data-url="${u}" title="${__('Delete image', 'woo-fitroom-preview')}"></button></div>`);
                                 }
                             });
                             // Pre-select first image
@@ -189,7 +820,7 @@
                 success: function(res){
                     if (res.success && res.data.images.length){
                         let html = '<div class="uploaded-images-grid">';
-                        res.data.images.forEach(u=>{ html += `<div class="img-item"><img src="${getProxyImageUrl(u)}" data-url="${u}"/><button class="delete-btn" data-url="${u}" title="${__('Delete image', 'woo-fitroom-preview')}"></button></div>`; });
+                        res.data.images.forEach(u=>{ html += `<div class="img-item"><img src="${getProxyImageUrl(u)}" data-url="${u}"/><button class="delete-btn tryon-delete-btn" data-url="${u}" title="${__('Delete image', 'woo-fitroom-preview')}"></button></div>`; });
                         html += '</div>';
                         let modal = document.getElementById('uploaded-images-modal');
                         if(!modal){
@@ -208,13 +839,13 @@
                             $('#selected-photo-name').text( __( 'Selected photo:', 'woo-fitroom-preview' ) + ' ' + selectedImageUrl.split('/').pop() );
                             // Close modal completely
                             $(modal).removeClass('is-open').hide();
-                            alert( __( 'Photo selected! Click Generate Preview.', 'woo-fitroom-preview' ) );
+                            showInfoPopup( __( 'Photo selected! Click Generate Preview.', 'woo-fitroom-preview' ) );
                         });
                     } else {
-                        alert( __( 'No saved images.', 'woo-fitroom-preview' ) );
+                        showInfoPopup( __( 'No saved images.', 'woo-fitroom-preview' ) );
                     }
                 },
-                error: () => alert( __( 'Error fetching images', 'woo-fitroom-preview' ) )
+                error: () => showErrorPopup( __( 'Error fetching images', 'woo-fitroom-preview' ) )
             });
         }
 
@@ -233,7 +864,7 @@
             console.log('Input field value set to:', $('#saved_user_image_url').val());
             
             // Provide feedback to the user (translated)
-            alert( __( 'Photo selected! Click Generate Preview.', 'woo-fitroom-preview' ) );
+            showInfoPopup( __( 'Photo selected! Click Generate Preview.', 'woo-fitroom-preview' ) );
 
             // Close the gallery modal
             $('#uploaded-images-modal').removeClass('is-open').hide();
@@ -323,15 +954,15 @@
                         }
                         
                         // Show success message
-                        alert(__('Image deleted successfully', 'woo-fitroom-preview'));
+                        showSuccessPopup(__('Image deleted successfully', 'woo-fitroom-preview'));
                     } else {
                         console.error('Delete Image: Server error:', response.data.message);
-                        alert(response.data.message || __('Failed to delete image', 'woo-fitroom-preview'));
+                        showErrorPopup(response.data.message || __('Failed to delete image', 'woo-fitroom-preview'));
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Delete Image: AJAX error:', {xhr, status, error});
-                    alert(__('Error communicating with server', 'woo-fitroom-preview'));
+                    showErrorPopup(__('Error communicating with server', 'woo-fitroom-preview'));
                 }
             });
         }
@@ -361,7 +992,7 @@
                                 list.append(`<div class="thumb more" id="my_uploads_more"><span>${__('View More','woo-fitroom-preview')}</span></div>`);
                             } else {
                                 const prox = getProxyImageUrl(u);
-                                list.append(`<div class="thumb" data-url="${u}"><img src="${prox}" data-url="${u}" alt="uploaded"/><button class="delete-btn" data-url="${u}" title="${__('Delete image', 'woo-fitroom-preview')}"></button></div>`);
+                                list.append(`<div class="thumb" data-url="${u}"><img src="${prox}" data-url="${u}" alt="uploaded"/><button class="delete-btn tryon-delete-btn" data-url="${u}" title="${__('Delete image', 'woo-fitroom-preview')}"></button></div>`);
                             }
                         });
                         // Pre-select first image if available
@@ -591,7 +1222,7 @@
                      document.body.appendChild(link);
                      link.click();
                      document.body.removeChild(link);
-                     alert('Try On Tool Preview is not available. Please check your settings.');
+                     showErrorPopup('Try On Tool Preview is not available. Please check your settings.');
                 });
             }
         });
@@ -662,12 +1293,12 @@
             
             $.post(WooFitroomPreview.ajaxurl, data, function(response) {
                 if (response.success) {
-                    alert(response.data.message || 'Preview saved successfully!');
+                    showSuccessPopup(response.data.message || 'Preview saved successfully!');
                 } else {
-                    alert(response.data.message || 'Failed to save preview.');
+                    showErrorPopup(response.data.message || 'Failed to save preview.');
                 }
             }).fail(function() {
-                alert('Error communicating with server to save preview.');
+                showErrorPopup('Error communicating with server to save preview.');
             }).always(function() {
                  saveButton.text('Save to My Account').prop('disabled', false);
             });
@@ -797,34 +1428,34 @@
                 }
             }
         });
-    });
 
-    $(document).on('click', '#view-uploaded-images', function(e){
-        e.preventDefault();
-        openUploadedImagesModal();
-    });
+        $(document).on('click', '#view-uploaded-images', function(e){
+            e.preventDefault();
+            openUploadedImagesModal();
+        });
 
-    // Extract object key from Wasabi URL irrespective of bucket / host
-    function getWasabiKeyFromUrl(url){
-        try {
-            const u       = new URL(url);
-            const bits    = u.pathname.replace(/^\/+/, '').split('/'); // [bucket, ...rest]
-            bits.shift();                                               // drop bucket
-            return bits.join('/');                                      // rest is key
-        } catch(e){
-            // Fallback: strip protocol+host then first segment (bucket)
-            return url.replace(/^https?:\/\/[^/]+\//, '').replace(/^[^/]+\//, '');
+        // Extract object key from Wasabi URL irrespective of bucket / host
+        function getWasabiKeyFromUrl(url){
+            try {
+                const u       = new URL(url);
+                const bits    = u.pathname.replace(/^\/+/, '').split('/'); // [bucket, ...rest]
+                bits.shift();                                               // drop bucket
+                return bits.join('/');                                      // rest is key
+            } catch(e){
+                // Fallback: strip protocol+host then first segment (bucket)
+                return url.replace(/^https?:\/\/[^/]+\//, '').replace(/^[^/]+\//, '');
+            }
         }
-    }
 
-    // Helper: build proxy URL (only if Wasabi host detected)
-    function getProxyImageUrl(inputUrl){
-        if(!/wasabisys\.com/i.test(inputUrl)){ return inputUrl; }
-        const key = getWasabiKeyFromUrl(inputUrl);
-        if (!key) { return inputUrl; }
-        const base = '/wp-json/woo-tryontool/v1/wasabi-image?key=' + encodeURIComponent(key);
-        // Cache-bust thumbs so broken cached responses aren’t reused
-        return base + '&t=' + Date.now();
-    }
+        // Helper: build proxy URL (only if Wasabi host detected)
+        function getProxyImageUrl(inputUrl){
+            if(!/wasabisys\.com/i.test(inputUrl)){ return inputUrl; }
+            const key = getWasabiKeyFromUrl(inputUrl);
+            if (!key) { return inputUrl; }
+            const base = '/wp-json/woo-tryontool/v1/wasabi-image?key=' + encodeURIComponent(key);
+            // Cache-bust thumbs so broken cached responses aren't reused
+            return base + '&t=' + Date.now();
+        }
+    });
 
 })(jQuery);

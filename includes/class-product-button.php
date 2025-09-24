@@ -23,7 +23,8 @@
 /**
  * Handle the product page button display and functionality for TryOnTool
  */
-class WooFitroomPreview_Product_Button {
+if (!class_exists('WooFitroomPreview_Product_Button')) {
+    class WooFitroomPreview_Product_Button {
     /**
      * Initialize the class
      */
@@ -115,6 +116,7 @@ class WooFitroomPreview_Product_Button {
                 class="button alt woo-fitroom-preview-button" 
                 data-product-id="<?php echo esc_attr($product->get_id()); ?>"
                 data-product-image="<?php echo esc_url($product_image_url); ?>"
+                data-theme-detection="enabled"
                 style="margin-left: 10px !important;">
             <?php _e('Try It On', 'woo-fitroom-preview'); ?>
         </button>
@@ -157,6 +159,14 @@ class WooFitroomPreview_Product_Button {
         }
 
         return true;
+    }
+
+    /**
+     * Add theme detection class to body
+     */
+    public function add_theme_detection_class($classes) {
+        $classes[] = 'tryon-theme-detection';
+        return $classes;
     }
 
     public function add_modal_template() {
@@ -329,6 +339,8 @@ class WooFitroomPreview_Product_Button {
     }
 
     public function enqueue_assets() {
+        // Add theme detection class to body
+        add_filter('body_class', array($this, 'add_theme_detection_class'));
         if (!is_product()) {
             return;
         }
@@ -360,6 +372,22 @@ class WooFitroomPreview_Product_Button {
                 'nonce' => wp_create_nonce('woo_fitroom_preview_nonce'),
                 'credits' => get_user_credits(),
                 'user_id' => get_current_user_id(),
+                'use_custom_color' => get_option('WOO_FITROOM_use_theme_colors', true) ? '1' : '0',
+                'custom_color' => get_option('WOO_FITROOM_custom_button_color', '#FF6E0E'),
+                'use_custom_padding' => get_option('WOO_FITROOM_use_theme_padding', true) ? '1' : '0',
+                'custom_padding' => array(
+                    'top' => get_option('WOO_FITROOM_padding_top', 12),
+                    'right' => get_option('WOO_FITROOM_padding_right', 20),
+                    'bottom' => get_option('WOO_FITROOM_padding_bottom', 12),
+                    'left' => get_option('WOO_FITROOM_padding_left', 20)
+                ),
+                'use_custom_border_radius' => get_option('WOO_FITROOM_use_theme_border_radius', true) ? '1' : '0',
+                'custom_border_radius' => array(
+                    'top_left' => get_option('WOO_FITROOM_border_radius_top_left', 50),
+                    'top_right' => get_option('WOO_FITROOM_border_radius_top_right', 50),
+                    'bottom_left' => get_option('WOO_FITROOM_border_radius_bottom_left', 50),
+                    'bottom_right' => get_option('WOO_FITROOM_border_radius_bottom_right', 50)
+                ),
                 'i18n' => array(
                     'processing' => __('Generating preview...', 'woo-fitroom-preview'),
                     'error' => __('Error generating preview', 'woo-fitroom-preview'),
@@ -1023,4 +1051,5 @@ add_action('woo_fitroom_delete_user_image', function($user_id, $image_url) {
 
 // Adjust the hook to call the static method
 add_action('init', array('WooFitroomPreview_Product_Button', 'check_and_delete_images'));
+}
 

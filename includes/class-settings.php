@@ -23,7 +23,8 @@
 /**
  * Settings class for WooCommerce TryOnTool Preview
  */
-class WooFitroomPreview_Settings {
+if (!class_exists('WooFitroomPreview_Settings')) {
+    class WooFitroomPreview_Settings {
     /**
      * Initialize the class
      */
@@ -144,6 +145,129 @@ class WooFitroomPreview_Settings {
                 'type' => 'boolean',
                 'sanitize_callback' => function($val) { return $val ? 1 : 0; },
                 'default' => 0,
+            )
+        );
+
+        // APPEARANCE SETTINGS - Button color options
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_use_theme_colors',
+            array(
+                'type' => 'boolean',
+                'sanitize_callback' => 'rest_sanitize_boolean',
+                'default' => true,
+            )
+        );
+
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_custom_button_color',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_hex_color',
+                'default' => '#FF6E0E',
+            )
+        );
+
+        // APPEARANCE SETTINGS - Button padding options
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_use_theme_padding',
+            array(
+                'type' => 'boolean',
+                'sanitize_callback' => 'rest_sanitize_boolean',
+                'default' => true,
+            )
+        );
+
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_padding_top',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 12,
+            )
+        );
+
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_padding_bottom',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 12,
+            )
+        );
+
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_padding_left',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 20,
+            )
+        );
+
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_padding_right',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 20,
+            )
+        );
+
+        // APPEARANCE SETTINGS - Button border radius options
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_use_theme_border_radius',
+            array(
+                'type' => 'boolean',
+                'sanitize_callback' => 'rest_sanitize_boolean',
+                'default' => true,
+            )
+        );
+
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_border_radius_top_left',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 50,
+            )
+        );
+
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_border_radius_top_right',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 50,
+            )
+        );
+
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_border_radius_bottom_left',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 50,
+            )
+        );
+
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_border_radius_bottom_right',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 50,
             )
         );
     }
@@ -331,6 +455,7 @@ class WooFitroomPreview_Settings {
         // FREE PLAN TOPUP - Reset free plan status
         delete_option( 'WOO_FITROOM_free_plan_used' );
         wp_send_json_success( array( 'message' => __( 'Free plan status reset.', 'woo-fitroom-preview' ) ) );
+    }
     }
 }
 

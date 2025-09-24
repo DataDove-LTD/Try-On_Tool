@@ -23,6 +23,13 @@
 ?>
 <div class="wrap">
        <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+       
+       <!-- Tab Navigation -->
+       <nav class="nav-tab-wrapper">
+           <a href="#general" class="nav-tab nav-tab-active" data-tab="general"><?php _e('General', 'woo-fitroom-preview'); ?></a>
+           <a href="#appearance" class="nav-tab" data-tab="appearance"><?php _e('Appearance', 'woo-fitroom-preview'); ?></a>
+       </nav>
+       
        <form method="post" action="options.php">
            <?php
            settings_fields('WOO_FITROOM_preview_options');
@@ -33,6 +40,9 @@
            $plan_product_id = get_option('WOO_FITROOM_plan_product_id', '');
            $show_on_demand_initially = ($license_status === 'valid' && $license_credits !== '' && (int)$license_credits <= 0);
            ?>
+           
+           <!-- General Tab -->
+           <div id="general-tab" class="tab-content">
            <table class="form-table">
                <tr>
                    <th scope="row">
@@ -365,6 +375,235 @@
                     </td>
                </tr>
            </table>
+           </div>
+           
+           <!-- Appearance Tab -->
+           <div id="appearance-tab" class="tab-content" style="display: none;">
+           <table class="form-table">
+               <tr>
+                   <th scope="row">
+                       <label for="WOO_FITROOM_use_theme_colors">
+                           <?php _e('Button Color Style', 'woo-fitroom-preview'); ?>
+                       </label>
+                   </th>
+                   <td>
+                       <fieldset>
+                           <label>
+                               <input type="radio" name="WOO_FITROOM_use_theme_colors" value="1" 
+                                      <?php checked(get_option('WOO_FITROOM_use_theme_colors', true), 1); ?>>
+                               <?php _e('Inherit theme primary color', 'woo-fitroom-preview'); ?>
+                           </label><br>
+                           <label>
+                               <input type="radio" name="WOO_FITROOM_use_theme_colors" value="0" 
+                                      <?php checked(get_option('WOO_FITROOM_use_theme_colors', true), 0); ?>>
+                               <?php _e('Use Try-On Tool defined color or your custom color', 'woo-fitroom-preview'); ?>
+                           </label>
+                       </fieldset>
+                       <p class="description">
+                           <?php _e('Choose whether the Try-On button should inherit your theme\'s primary color or use Try-On Tool defined color.', 'woo-fitroom-preview'); ?>
+                       </p>
+                   </td>
+               </tr>
+                <tr id="custom-color-row" style="<?php echo get_option('WOO_FITROOM_use_theme_colors', true) ? 'display: none;' : ''; ?>">
+                    <th scope="row">
+                        <label for="WOO_FITROOM_custom_button_color">
+                            <?php _e('Custom Button Color', 'woo-fitroom-preview'); ?>
+                        </label>
+                    </th>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <input type="color" id="WOO_FITROOM_custom_button_color" 
+                                   name="WOO_FITROOM_custom_button_color" 
+                                   value="<?php echo esc_attr(get_option('WOO_FITROOM_custom_button_color', '#FF6E0E')); ?>"
+                                   style="width: 60px; height: 40px;">
+                            <input type="text" id="WOO_FITROOM_custom_button_color_text" 
+                                   placeholder="#FF6E0E" 
+                                   value="<?php echo esc_attr(get_option('WOO_FITROOM_custom_button_color', '#FF6E0E')); ?>"
+                                   style="width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-family: monospace;">
+                            <span id="color-display" style="font-family: monospace; font-size: 14px; color: #666;">
+                                <?php echo esc_html(get_option('WOO_FITROOM_custom_button_color', '#FF6E0E')); ?>
+                            </span>
+                        </div>
+                        <p class="description">
+                            <?php _e('Select a custom color for the Try-On button using the color picker or enter a hex code. Default: #FF6E0E (Orange).', 'woo-fitroom-preview'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="WOO_FITROOM_use_theme_padding">
+                            <?php _e('Button Padding Style', 'woo-fitroom-preview'); ?>
+                        </label>
+                    </th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="radio" name="WOO_FITROOM_use_theme_padding" value="1" 
+                                       <?php checked(get_option('WOO_FITROOM_use_theme_padding', true), 1); ?>>
+                                <?php _e('Use Try-On Tool default padding', 'woo-fitroom-preview'); ?>
+                            </label><br>
+                            <label>
+                                <input type="radio" name="WOO_FITROOM_use_theme_padding" value="0" 
+                                       <?php checked(get_option('WOO_FITROOM_use_theme_padding', true), 0); ?>>
+                                <?php _e('Use custom padding values', 'woo-fitroom-preview'); ?>
+                            </label>
+                        </fieldset>
+                        <p class="description">
+                            <?php _e('Choose whether to use Try-On Tool default padding (12px top/bottom, 20px left/right) or set custom padding values.', 'woo-fitroom-preview'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr id="custom-padding-row" style="<?php echo get_option('WOO_FITROOM_use_theme_padding', true) ? 'display: none;' : ''; ?>">
+                    <th scope="row">
+                        <label for="WOO_FITROOM_custom_button_padding">
+                            <?php _e('Custom Button Padding', 'woo-fitroom-preview'); ?>
+                        </label>
+                    </th>
+                    <td>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 400px;">
+                            <div>
+                                <label for="WOO_FITROOM_padding_top" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                    <?php _e('Top Padding (px)', 'woo-fitroom-preview'); ?>
+                                </label>
+                                <input type="number" id="WOO_FITROOM_padding_top" 
+                                       name="WOO_FITROOM_padding_top" 
+                                       value="<?php echo esc_attr(get_option('WOO_FITROOM_padding_top', '12')); ?>"
+                                       min="0" max="50" step="1"
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div>
+                                <label for="WOO_FITROOM_padding_bottom" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                    <?php _e('Bottom Padding (px)', 'woo-fitroom-preview'); ?>
+                                </label>
+                                <input type="number" id="WOO_FITROOM_padding_bottom" 
+                                       name="WOO_FITROOM_padding_bottom" 
+                                       value="<?php echo esc_attr(get_option('WOO_FITROOM_padding_bottom', '12')); ?>"
+                                       min="0" max="50" step="1"
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div>
+                                <label for="WOO_FITROOM_padding_left" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                    <?php _e('Left Padding (px)', 'woo-fitroom-preview'); ?>
+                                </label>
+                                <input type="number" id="WOO_FITROOM_padding_left" 
+                                       name="WOO_FITROOM_padding_left" 
+                                       value="<?php echo esc_attr(get_option('WOO_FITROOM_padding_left', '20')); ?>"
+                                       min="0" max="50" step="1"
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div>
+                                <label for="WOO_FITROOM_padding_right" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                    <?php _e('Right Padding (px)', 'woo-fitroom-preview'); ?>
+                                </label>
+                                <input type="number" id="WOO_FITROOM_padding_right" 
+                                       name="WOO_FITROOM_padding_right" 
+                                       value="<?php echo esc_attr(get_option('WOO_FITROOM_padding_right', '20')); ?>"
+                                       min="0" max="50" step="1"
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                        </div>
+                        <p class="description" style="margin-top: 10px;">
+                            <?php _e('Set custom padding values for the Try-On button. Default: 12px top/bottom, 20px left/right.', 'woo-fitroom-preview'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="WOO_FITROOM_use_theme_border_radius">
+                            <?php _e('Button Border Radius Style', 'woo-fitroom-preview'); ?>
+                        </label>
+                    </th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="radio" name="WOO_FITROOM_use_theme_border_radius" value="1"
+                                       <?php checked(get_option('WOO_FITROOM_use_theme_border_radius', true), 1); ?>>
+                                <?php _e('Inherit theme border radius', 'woo-fitroom-preview'); ?>
+                            </label><br>
+                            <label>
+                                <input type="radio" name="WOO_FITROOM_use_theme_border_radius" value="0"
+                                       <?php checked(get_option('WOO_FITROOM_use_theme_border_radius', true), 0); ?>>
+                                <?php _e('Use Try-On Tool defined border radius (50px) or your own custom', 'woo-fitroom-preview'); ?>
+                            </label>
+                        </fieldset>
+                        <p class="description">
+                            <?php _e('Choose whether to inherit theme border radius or use Try-On Tool defined border radius (50px for all corners).', 'woo-fitroom-preview'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr id="custom-border-radius-row" style="<?php echo get_option('WOO_FITROOM_use_theme_border_radius', true) ? 'display: none;' : ''; ?>">
+                    <th scope="row">
+                        <label for="WOO_FITROOM_custom_button_border_radius">
+                            <?php _e('Custom Button Border Radius', 'woo-fitroom-preview'); ?>
+                        </label>
+                    </th>
+                    <td>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 500px;">
+                            <div>
+                                <label for="WOO_FITROOM_border_radius_top_left" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                    <?php _e('Top Left (px)', 'woo-fitroom-preview'); ?>
+                                </label>
+                                <input type="number" id="WOO_FITROOM_border_radius_top_left" 
+                                       name="WOO_FITROOM_border_radius_top_left" 
+                                       value="<?php echo esc_attr(get_option('WOO_FITROOM_border_radius_top_left', '50')); ?>"
+                                       min="0" max="100" step="1"
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div>
+                                <label for="WOO_FITROOM_border_radius_top_right" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                    <?php _e('Top Right (px)', 'woo-fitroom-preview'); ?>
+                                </label>
+                                <input type="number" id="WOO_FITROOM_border_radius_top_right" 
+                                       name="WOO_FITROOM_border_radius_top_right" 
+                                       value="<?php echo esc_attr(get_option('WOO_FITROOM_border_radius_top_right', '50')); ?>"
+                                       min="0" max="100" step="1"
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div>
+                                <label for="WOO_FITROOM_border_radius_bottom_left" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                    <?php _e('Bottom Left (px)', 'woo-fitroom-preview'); ?>
+                                </label>
+                                <input type="number" id="WOO_FITROOM_border_radius_bottom_left" 
+                                       name="WOO_FITROOM_border_radius_bottom_left" 
+                                       value="<?php echo esc_attr(get_option('WOO_FITROOM_border_radius_bottom_left', '50')); ?>"
+                                       min="0" max="100" step="1"
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div>
+                                <label for="WOO_FITROOM_border_radius_bottom_right" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                    <?php _e('Bottom Right (px)', 'woo-fitroom-preview'); ?>
+                                </label>
+                                <input type="number" id="WOO_FITROOM_border_radius_bottom_right" 
+                                       name="WOO_FITROOM_border_radius_bottom_right" 
+                                       value="<?php echo esc_attr(get_option('WOO_FITROOM_border_radius_bottom_right', '50')); ?>"
+                                       min="0" max="100" step="1"
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                        </div>
+                        <p class="description" style="margin-top: 10px;">
+                            <?php _e('Set custom border radius values for each corner of the Try-On button. Default: 50px for all corners.', 'woo-fitroom-preview'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <?php _e('Important Note', 'woo-fitroom-preview'); ?>
+                    </th>
+                    <td>
+                        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 12px; margin: 10px 0;">
+                            <p style="margin: 0; color: #856404;">
+                                <strong><?php _e('Cache Notice:', 'woo-fitroom-preview'); ?></strong> 
+                                <?php _e('If you have any caching plugin activated (WP Rocket, W3 Total Cache, WP Super Cache, etc.), make sure to clear the hard cache before checking if the changes are applied on your frontend.', 'woo-fitroom-preview'); ?>
+                            </p>
+                        </div>
+                        <p class="description">
+                            <?php _e('Changes will be visible on your product pages after clearing cache.', 'woo-fitroom-preview'); ?>
+                        </p>
+                    </td>
+                </tr>
+           </table>
+           </div>
+           
            <?php submit_button(); ?>
        </form>
 
@@ -458,7 +697,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * -------------------------------------------------------------- */
     // document.getElementById('FitRoom-change-plan').addEventListener('click', function(e){
     //     e.preventDefault();
-    //     window.location.href = 'https://tryontool.com/my-account/subscriptions/';
+    //     window.location.href = 'https://staging4.tryontool.com/my-account/subscriptions/';
     // });
 
 
@@ -581,6 +820,151 @@ document.addEventListener('DOMContentLoaded', function () {
     $(window).on('click', function (e) {
         if (e.target === document.getElementById('consent-records-modal')) {
             $('#consent-records-modal').hide();
+        }
+         });
+
+    /* ----------------------------------------------------------------
+     *  TAB FUNCTIONALITY
+     * ---------------------------------------------------------------- */
+    $('.nav-tab').on('click', function(e) {
+        e.preventDefault();
+        
+        // Remove active class from all tabs
+        $('.nav-tab').removeClass('nav-tab-active');
+        $('.tab-content').hide();
+        
+        // Add active class to clicked tab
+        $(this).addClass('nav-tab-active');
+        
+        // Show corresponding content
+        const tab = $(this).data('tab');
+        $('#' + tab + '-tab').show();
+    });
+
+     /* ----------------------------------------------------------------
+      *  APPEARANCE SETTINGS FUNCTIONALITY
+      * ---------------------------------------------------------------- */
+     
+     // Store the last custom color for memory functionality
+     let lastCustomColor = '<?php echo esc_js(get_option('WOO_FITROOM_custom_button_color', '#FF6E0E')); ?>';
+     let userHasChangedCustomColor = false;
+     
+     // Toggle custom color row based on radio selection
+     $('input[name="WOO_FITROOM_use_theme_colors"]').on('change', function() {
+         const useThemeColors = $(this).val() === '1';
+         if (useThemeColors) {
+             $('#custom-color-row').hide();
+         } else {
+             $('#custom-color-row').show();
+             
+             // If user hasn't manually changed the custom color, restore the last custom color
+             if (!userHasChangedCustomColor) {
+                 $('#WOO_FITROOM_custom_button_color').val(lastCustomColor);
+                 $('#WOO_FITROOM_custom_button_color_text').val(lastCustomColor);
+                 $('#color-display').text(lastCustomColor);
+             }
+         }
+     });
+
+     // Sync color picker with text input
+     $('#WOO_FITROOM_custom_button_color').on('input', function() {
+         const color = $(this).val();
+         $('#WOO_FITROOM_custom_button_color_text').val(color);
+         $('#color-display').text(color);
+         lastCustomColor = color;
+         userHasChangedCustomColor = true;
+     });
+
+     // Sync text input with color picker
+     $('#WOO_FITROOM_custom_button_color_text').on('input', function() {
+         let color = $(this).val();
+         
+         // Add # if missing
+         if (color && !color.startsWith('#')) {
+             color = '#' + color;
+         }
+         
+         // Validate hex color
+         if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+             $('#WOO_FITROOM_custom_button_color').val(color);
+             $('#color-display').text(color);
+             lastCustomColor = color;
+             userHasChangedCustomColor = true;
+             $(this).css('border-color', '#ddd');
+         } else if (color.length > 0) {
+             // Show error for invalid hex
+             $(this).css('border-color', '#dc3545');
+         } else {
+             $(this).css('border-color', '#ddd');
+         }
+     });
+
+     // Handle text input on blur (when user finishes typing)
+     $('#WOO_FITROOM_custom_button_color_text').on('blur', function() {
+         let color = $(this).val();
+         
+         // Add # if missing
+         if (color && !color.startsWith('#')) {
+             color = '#' + color;
+         }
+         
+         // If valid hex, update everything
+         if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+             $('#WOO_FITROOM_custom_button_color').val(color);
+             $('#color-display').text(color);
+             lastCustomColor = color;
+             userHasChangedCustomColor = true;
+         } else if (color.length > 0) {
+             // Reset to last valid color if invalid
+             $(this).val(lastCustomColor);
+             $('#WOO_FITROOM_custom_button_color').val(lastCustomColor);
+             $('#color-display').text(lastCustomColor);
+         }
+         
+         $(this).css('border-color', '#ddd');
+     });
+
+     /* ----------------------------------------------------------------
+      *  PADDING SETTINGS FUNCTIONALITY
+      * ---------------------------------------------------------------- */
+     
+     // Toggle custom padding row based on radio selection
+     $('input[name="WOO_FITROOM_use_theme_padding"]').on('change', function() {
+         const useThemePadding = $(this).val() === '1';
+         if (useThemePadding) {
+             $('#custom-padding-row').hide();
+         } else {
+             $('#custom-padding-row').show();
+         }
+     });
+
+     // Toggle custom border radius row based on radio selection
+     $('input[name="WOO_FITROOM_use_theme_border_radius"]').on('change', function() {
+         const useThemeBorderRadius = $(this).val() === '1';
+         if (useThemeBorderRadius) {
+             $('#custom-border-radius-row').hide();
+         } else {
+             $('#custom-border-radius-row').show();
+         }
+     });
+
+     // Validate padding inputs (ensure they're within reasonable bounds)
+     $('input[id^="WOO_FITROOM_padding_"]').on('input', function() {
+         let value = parseInt($(this).val());
+         if (isNaN(value) || value < 0) {
+             $(this).val(0);
+         } else if (value > 50) {
+             $(this).val(50);
+         }
+     });
+
+     // Validate border radius inputs (ensure they're within reasonable bounds)
+     $('input[id^="WOO_FITROOM_border_radius_"]').on('input', function() {
+         let value = parseInt($(this).val());
+         if (isNaN(value) || value < 0) {
+             $(this).val(0);
+         } else if (value > 100) {
+             $(this).val(100);
         }
          });
 

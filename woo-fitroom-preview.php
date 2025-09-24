@@ -22,9 +22,11 @@
  */
 /**
  * Plugin Name: Try-On Tool
+ * Plugin URI: https://tryontool.com
  * Description: Connect WooCommerce with Try-On Tool for AI-generated virtual try-on previews
- * Version: 1.2.1
+ * Version: 1.2.2
  * Author: DataDove
+ * Author URI: https://tryontool.com
  * Text Domain: woo-fitroom-preview
  * Domain Path: /languages
  * Requires at least: 5.6
@@ -32,13 +34,147 @@
  * WC requires at least: 5.0
  * WC tested up to: 8.0
  * HPOS Compatible: true
+ * Network: false
+ * Update URI: https://tryontool.com/updates/
  */
-// Modified by DataDove LTD on 12/8/2025
+// Modified by DataDove LTD on 9/24/2025
 
 // If this file is called directly, abort.
 if (!defined('WPINC')) {
     die;
 }
+
+// Define plugin identifier for WordPress compatibility across folder name changes
+if (!defined('WOO_FITROOM_PLUGIN_IDENTIFIER')) {
+    define('WOO_FITROOM_PLUGIN_IDENTIFIER', 'try-on-tool-plugin');
+}
+
+// Prevent multiple plugin instances - check early to avoid conflicts
+if (defined('WOO_FITROOM_PREVIEW_VERSION')) {
+    // Plugin already loaded, prevent conflicts
+    add_action('admin_notices', function() {
+        $current_version = defined('WOO_FITROOM_PREVIEW_VERSION') ? WOO_FITROOM_PREVIEW_VERSION : 'unknown';
+        echo '<div class="notice notice-error"><p><strong>Try-On Tool:</strong> Multiple versions detected. ';
+        echo 'Current version: ' . esc_html($current_version) . '. ';
+        echo 'Please deactivate the older version before activating the newer one.</p></div>';
+    });
+    return;
+}
+
+// Additional safety check - if any of our classes already exist, abort
+if (class_exists('WooFITROOM_Wasabi') || 
+    class_exists('WooFitroomPreview_Settings') || 
+    class_exists('WooFitroomPreview_Product_Button') ||
+    class_exists('WooFitroomPreview_Shortcode') ||
+    class_exists('WooFitroomPreview_API_Handler')) {
+    
+    add_action('admin_notices', function() {
+        echo '<div class="notice notice-error"><p><strong>Try-On Tool:</strong> Plugin classes already loaded. ';
+        echo 'Please deactivate the existing version before activating the new one.</p></div>';
+    });
+    return;
+}
+
+// Check if we're in the correct plugin directory (prevent loading from wrong location)
+$current_plugin_file = plugin_basename(__FILE__);
+$expected_plugin_file = 'woo-fitroom-preview.php';
+if (basename($current_plugin_file) !== $expected_plugin_file) {
+    add_action('admin_notices', function() {
+        echo '<div class="notice notice-error"><p><strong>Try-On Tool:</strong> Plugin file location mismatch. ';
+        echo 'Please ensure the plugin is installed in the correct directory.</p></div>';
+    });
+    return;
+}
+
+// Register activation and deactivation hooks
+register_activation_hook(__FILE__, 'woo_fitroom_preview_activate');
+register_deactivation_hook(__FILE__, 'woo_fitroom_preview_deactivate');
+
+function woo_fitroom_preview_activate() {
+    // Set a flag to indicate the plugin is activated
+    update_option('woo_fitroom_preview_activated', true);
+    update_option('woo_fitroom_preview_version', WOO_FITROOM_PREVIEW_VERSION);
+    
+    // Store plugin identifier for folder name compatibility
+    update_option('woo_fitroom_preview_plugin_identifier', WOO_FITROOM_PLUGIN_IDENTIFIER);
+    
+    // Check if this is an update by comparing versions
+    $previous_version = get_option('woo_fitroom_preview_previous_version', '');
+    $is_update = false;
+    
+    if ($previous_version && version_compare($previous_version, WOO_FITROOM_PREVIEW_VERSION, '<')) {
+        // This is an update
+        $is_update = true;
+        update_option('woo_fitroom_preview_updated_from', $previous_version);
+        update_option('woo_fitroom_preview_updated_to', WOO_FITROOM_PREVIEW_VERSION);
+        
+        // Clean up any potential conflicts from old version
+        woo_fitroom_cleanup_old_version();
+        
+        // Show update success notice
+        add_action('admin_notices', function() use ($previous_version) {
+            echo '<div class="notice notice-success is-dismissible">';
+            echo '<p><strong>Try-On Tool:</strong> Successfully updated from version ' . esc_html($previous_version) . ' to ' . esc_html(WOO_FITROOM_PREVIEW_VERSION) . '!</p>';
+            echo '</div>';
+        });
+    }
+    
+    // Store current version as previous for next update
+    update_option('woo_fitroom_preview_previous_version', WOO_FITROOM_PREVIEW_VERSION);
+    
+    // Add default options (moved from duplicate function)
+    add_option('WOO_FITROOM_preview_enabled', false);
+    add_option('WOO_FITROOM_daily_credits', 0);
+    add_option('WOO_FITROOM_logged_in_only', false);
+    add_option('WOO_FITROOM_allowed_roles', array());
+    add_option('WOO_FITROOM_allowed_user_ids', '');
+    add_option('WOO_FITROOM_required_user_tag', '');
+    add_option('WOO_FITROOM_require_extra_consents', 1); // Default to checked
+    add_option('WOO_FITROOM_consent_default_set', true); // Mark that default consent has been set
+    
+    // Flush rewrite rules
+    flush_rewrite_rules();
+}
+
+function woo_fitroom_cleanup_old_version() {
+    // Clear any cached data that might cause conflicts
+    wp_cache_flush();
+    
+    // Clear any transients that might be from old version
+    global $wpdb;
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_woo_fitroom_%'");
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_woo_fitroom_%'");
+    
+    // Clear any object cache
+    if (function_exists('wp_cache_delete_group')) {
+        wp_cache_delete_group('woo_fitroom');
+    }
+}
+
+function woo_fitroom_preview_deactivate() {
+    // Clear the activation flag
+    delete_option('woo_fitroom_preview_activated');
+    
+    // Flush rewrite rules
+    flush_rewrite_rules();
+}
+
+// Show update notice if plugin was just updated
+add_action('admin_notices', function() {
+    $updated_from = get_option('woo_fitroom_preview_updated_from', '');
+    $updated_to = get_option('woo_fitroom_preview_updated_to', '');
+    
+    if ($updated_from && $updated_to) {
+        echo '<div class="notice notice-success is-dismissible">';
+        echo '<p><strong>Try-On Tool:</strong> Successfully updated from version ' . esc_html($updated_from) . ' to ' . esc_html($updated_to) . '! ';
+        echo 'New features include enhanced theme compatibility for Astra, OceanWP, GeneratePress, and Storefront themes.</p>';
+        echo '</div>';
+        
+        // Clear the update flags after showing the notice
+        delete_option('woo_fitroom_preview_updated_from');
+        delete_option('woo_fitroom_preview_updated_to');
+    }
+});
 
 // Declare HPOS compatibility
 add_action( 'before_woocommerce_init', function() {
@@ -48,7 +184,8 @@ add_action( 'before_woocommerce_init', function() {
 });
 
 // HPOS compatibility helper functions
-function fitroom_get_order_meta( $order_id, $key, $single = true ) {
+if (!function_exists('fitroom_get_order_meta')) {
+    function fitroom_get_order_meta( $order_id, $key, $single = true ) {
     $order = wc_get_order( $order_id );
     if ( ! $order ) {
         return false;
@@ -56,7 +193,7 @@ function fitroom_get_order_meta( $order_id, $key, $single = true ) {
     return $order->get_meta( $key, $single );
 }
 
-function fitroom_update_order_meta( $order_id, $key, $value ) {
+    function fitroom_update_order_meta( $order_id, $key, $value ) {
     $order = wc_get_order( $order_id );
     if ( ! $order ) {
         return false;
@@ -66,7 +203,7 @@ function fitroom_update_order_meta( $order_id, $key, $value ) {
     return true;
 }
 
-function fitroom_delete_order_meta( $order_id, $key ) {
+    function fitroom_delete_order_meta( $order_id, $key ) {
     $order = wc_get_order( $order_id );
     if ( ! $order ) {
         return false;
@@ -74,6 +211,7 @@ function fitroom_delete_order_meta( $order_id, $key ) {
     $order->delete_meta_data( $key );
     $order->save();
     return true;
+    }
 }
 
 // BEGIN: Buffer output early to prevent BOM/header issues
@@ -88,10 +226,16 @@ if ( ! ob_get_level() ) {
 }
 // END buffer setup
 
-// Define plugin constants
-define('WOO_FITROOM_PREVIEW_VERSION', '1.2.1');
-define('WOO_FITROOM_PREVIEW_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('WOO_FITROOM_PREVIEW_PLUGIN_URL', plugin_dir_url(__FILE__));
+// Define plugin constants only if not already defined
+if (!defined('WOO_FITROOM_PREVIEW_VERSION')) {
+    define('WOO_FITROOM_PREVIEW_VERSION', '1.2.2');
+}
+if (!defined('WOO_FITROOM_PREVIEW_PLUGIN_DIR')) {
+    define('WOO_FITROOM_PREVIEW_PLUGIN_DIR', plugin_dir_path(__FILE__));
+}
+if (!defined('WOO_FITROOM_PREVIEW_PLUGIN_URL')) {
+    define('WOO_FITROOM_PREVIEW_PLUGIN_URL', plugin_dir_url(__FILE__));
+}
 // FitRoom relay endpoints
 if ( ! defined( 'FITROOM_RELAY_ENDPOINT' ) ) {
     define( 'FITROOM_RELAY_ENDPOINT', 'https://tryontool.com/wp-json/fitroom/v1/preview' );
@@ -99,9 +243,13 @@ if ( ! defined( 'FITROOM_RELAY_ENDPOINT' ) ) {
 if ( ! defined( 'FITROOM_VALIDATE_ENDPOINT' ) ) {
     define( 'FITROOM_VALIDATE_ENDPOINT', 'https://tryontool.com/wp-json/fitroom/v1/validate-license' );
 }
-define('WOO_FITROOM_INACTIVITY_WINDOW', YEAR_IN_SECONDS);
+if (!defined('WOO_FITROOM_INACTIVITY_WINDOW')) {
+    define('WOO_FITROOM_INACTIVITY_WINDOW', YEAR_IN_SECONDS);
+}
 // Primary text-domain constant (used throughout PHP & JS)
-define('WOO_FITROOM_TEXTDOMAIN', 'woo-fitroom-preview');
+if (!defined('WOO_FITROOM_TEXTDOMAIN')) {
+    define('WOO_FITROOM_TEXTDOMAIN', 'woo-fitroom-preview');
+}
 
 /**
  * Check if WooCommerce is active
@@ -185,23 +333,7 @@ class WooFitroomPreview {
 // Initialize the plugin
 add_action('plugins_loaded', ['WooFitroomPreview', 'get_instance']);
 
-// Register activation hook
-register_activation_hook(__FILE__, 'WOO_FITROOM_preview_activate');
-
-/**
- * Plugin activation
- */
-function WOO_FITROOM_preview_activate() {
-    // Add default options
-    add_option('WOO_FITROOM_preview_enabled', false);
-    add_option('WOO_FITROOM_daily_credits', 0);
-    add_option('WOO_FITROOM_logged_in_only', false);
-    add_option('WOO_FITROOM_allowed_roles', array());
-    add_option('WOO_FITROOM_allowed_user_ids', '');
-    add_option('WOO_FITROOM_required_user_tag', '');
-    add_option('WOO_FITROOM_require_extra_consents', 1); // Default to checked
-    add_option('WOO_FITROOM_consent_default_set', true); // Mark that default consent has been set
-}
+// Plugin activation function moved to top of file to avoid duplication
 
 add_action('rest_api_init', function () {
     register_rest_route('woo-tryontool/v1', '/wasabi-image', array(

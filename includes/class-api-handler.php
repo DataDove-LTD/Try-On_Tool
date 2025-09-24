@@ -29,7 +29,8 @@
  * © 2025 Your Company — MIT / GPL-compatible
  */
 
-class WooFitroomPreview_API_Handler {
+if (!class_exists('WooFitroomPreview_API_Handler')) {
+    class WooFitroomPreview_API_Handler {
 
 	/* ─── CONSTANTS ────────────────────────────────────────────────── */
 	// Direct external endpoints removed – we use the relay constant
@@ -360,5 +361,6 @@ class WooFitroomPreview_API_Handler {
         @unlink($temp_file); // Clean up original temp file
         
         return $image_data;
+    }
     }
 }

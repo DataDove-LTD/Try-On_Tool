@@ -23,7 +23,8 @@
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 
-class WooFITROOM_Wasabi {
+if (!class_exists('WooFITROOM_Wasabi')) {
+    class WooFITROOM_Wasabi {
 
     private static $s3 = null;
     private static $bucket = '';
@@ -284,5 +285,6 @@ class WooFITROOM_Wasabi {
     }
 
     public static function bucket(){return self::$bucket;}
+    }
 }
 

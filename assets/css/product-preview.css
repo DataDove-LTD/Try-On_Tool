@@ -41,6 +41,374 @@
   --tryon-primary-25: color-mix(in srgb, var(--tryon-primary) 25%, transparent);
   --tryon-soft-bg: color-mix(in srgb, var(--tryon-primary) 6%, white);
 }
+
+/* Try-On Button Theme Integration */
+.woo-fitroom-preview-button {
+  /* Base button styling - will be overridden by theme detection or custom color */
+  background: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba));
+  color: var(--tryon-theme-text, #ffffff);
+  border: var(--tryon-theme-border-width, 1px) var(--tryon-theme-border-style, solid) var(--tryon-theme-border, var(--tryon-custom-color, #007cba));
+  border-radius: var(--tryon-custom-border-radius, var(--tryon-theme-radius, 3px));
+  padding: var(--tryon-custom-padding, var(--tryon-theme-padding, 12px 20px));
+  font-size: var(--tryon-theme-font-size, 14px);
+  font-weight: var(--tryon-theme-font-weight, 600);
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+  min-height: 44px;
+  line-height: var(--tryon-theme-line-height, 1.4);
+  text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap; /* Prevent text wrapping */
+  min-width: auto; /* Allow natural width */
+  text-transform: var(--tryon-theme-text-transform, none);
+  letter-spacing: var(--tryon-theme-letter-spacing, normal);
+  box-shadow: var(--tryon-theme-box-shadow, none);
+}
+
+/* Ensure main product page button keeps original font size */
+.woocommerce .woo-fitroom-preview-button {
+  font-size: var(--tryon-theme-font-size, 14px) !important;
+}
+
+/* Fix for sticky banner buttons - ensure proper width and prevent text wrapping */
+.ast-sticky-add-to-cart .woo-fitroom-preview-button,
+.woocommerce-sticky-add-to-cart .woo-fitroom-preview-button,
+.sticky-add-to-cart .woo-fitroom-preview-button,
+.ast-sticky-cart .woo-fitroom-preview-button {
+  white-space: nowrap !important;
+  min-width: 120px !important; /* Ensure minimum width for "Try It On" text */
+  width: auto !important;
+  flex-shrink: 0 !important; /* Prevent shrinking in flex containers */
+  display: inline-block !important;
+  line-height: 1.2 !important; /* Tighter line height for sticky banner */
+  padding: 8px 16px !important; /* Slightly smaller padding for sticky banner */
+  font-size: 13px !important; /* Slightly smaller font for sticky banner */
+}
+
+/* Additional fix for Astra theme sticky elements */
+.ast-sticky-add-to-cart .woo-fitroom-preview-button,
+.ast-sticky-cart .woo-fitroom-preview-button {
+  margin-left: 8px !important; /* Reduce margin in sticky banner */
+  margin-right: 0 !important;
+}
+
+/* Custom Popup Styles */
+.tryon-custom-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tryon-popup-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.tryon-popup-content {
+  position: relative;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: tryon-popup-slide-in 0.3s ease-out;
+}
+
+@keyframes tryon-popup-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tryon-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tryon-popup-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.tryon-popup-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.tryon-popup-close:hover {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.tryon-popup-body {
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.tryon-popup-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tryon-popup-icon-info {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.tryon-popup-icon-info::before {
+  content: "ℹ";
+}
+
+.tryon-popup-icon-success {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.tryon-popup-icon-success::before {
+  content: "✓";
+}
+
+.tryon-popup-icon-error {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.tryon-popup-icon-error::before {
+  content: "✕";
+}
+
+.tryon-popup-icon-warning {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.tryon-popup-icon-warning::before {
+  content: "⚠";
+}
+
+.tryon-popup-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+  flex: 1;
+}
+
+.tryon-popup-footer {
+  padding: 0 20px 20px 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.tryon-popup-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.tryon-popup-cancel {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.tryon-popup-cancel:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.tryon-popup-confirm {
+  background: #007cba;
+  color: #ffffff;
+}
+
+.tryon-popup-btn-info {
+  background: #1976d2;
+}
+
+.tryon-popup-btn-success {
+  background: #2e7d32;
+}
+
+.tryon-popup-btn-error {
+  background: #d32f2f;
+}
+
+.tryon-popup-btn-warning {
+  background: #f57c00;
+}
+
+.tryon-popup-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .tryon-popup-content {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .tryon-popup-header,
+  .tryon-popup-body,
+  .tryon-popup-footer {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  
+  .tryon-popup-footer {
+    flex-direction: column;
+  }
+  
+  .tryon-popup-btn {
+    width: 100%;
+  }
+}
+
+.woo-fitroom-preview-button:hover {
+  background: var(--tryon-theme-bg-hover, var(--tryon-custom-color-hover, #005a87));
+  color: var(--tryon-theme-text-hover, #ffffff);
+  border-color: var(--tryon-theme-border-hover, var(--tryon-custom-color-hover, #005a87));
+  transform: translateY(-1px);
+  box-shadow: var(--tryon-theme-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15));
+}
+
+.woo-fitroom-preview-button:focus {
+  outline: 2px solid var(--tryon-theme-focus, #007cba);
+  outline-offset: 2px;
+}
+
+.woo-fitroom-preview-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile responsive button */
+@media (max-width: 768px) {
+  .woo-fitroom-preview-button {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-top: 10px !important;
+    padding: 14px 20px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* Theme-specific overrides for popular themes */
+/* Astra Theme */
+.ast-separate-container .woo-fitroom-preview-button,
+.ast-page-builder-template .woo-fitroom-preview-button {
+  background: var(--ast-global-color-0, #007cba) !important;
+  border-color: var(--ast-global-color-0, #007cba) !important;
+}
+
+/* GeneratePress Theme - Force customizer color over WooCommerce */
+.gp-theme .woo-fitroom-preview-button,
+.generatepress .woo-fitroom-preview-button,
+body.generatepress .woo-fitroom-preview-button {
+  background: var(--gp-theme-primary, #007cba) !important;
+  border-color: var(--gp-theme-primary, #007cba) !important;
+}
+
+/* OceanWP Theme */
+.oceanwp-theme .woo-fitroom-preview-button {
+  background: var(--ocean-primary, var(--ocean-primary-color, #007cba)) !important;
+  border-color: var(--ocean-primary, var(--ocean-primary-color, #007cba)) !important;
+}
+
+/* Storefront Theme */
+.storefront .woo-fitroom-preview-button {
+  background: var(--storefront-primary, #007cba) !important;
+  border-color: var(--storefront-primary, #007cba) !important;
+}
+
+/* Additional theme detection enhancements */
+.tryon-theme-detection .woo-fitroom-preview-button {
+  /* Ensure button inherits theme styles */
+  font-family: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: inherit !important;
+}
+
+/* Specific theme overrides for better integration - removed !important to allow dynamic detection */
+/* Astra Theme specific */
+.ast-separate-container .woo-fitroom-preview-button,
+.ast-page-builder-template .woo-fitroom-preview-button {
+  border-radius: var(--ast-button-border-radius, var(--tryon-custom-border-radius, 3px));
+  font-weight: var(--ast-button-font-weight, 600);
+}
+
+/* GeneratePress specific */
+.gp-theme .woo-fitroom-preview-button {
+  border-radius: var(--gp-button-border-radius, var(--tryon-custom-border-radius, 3px));
+  font-weight: var(--gp-button-font-weight, 600);
+}
+
+/* OceanWP specific */
+.oceanwp-theme .woo-fitroom-preview-button {
+  border-radius: var(--ocean-button-border-radius, var(--tryon-custom-border-radius, 3px));
+  font-weight: var(--ocean-button-font-weight, 600);
+}
+
+/* Storefront specific */
+.storefront .woo-fitroom-preview-button {
+  border-radius: var(--storefront-button-border-radius, var(--tryon-custom-border-radius, 3px));
+  font-weight: var(--storefront-button-font-weight, 600);
+}
 .woo-fitroom-preview-modal .modal-content {
   background-color: #fefefe;
   margin: 5% auto;
@@ -384,6 +752,13 @@ color:#fff;
 font-size:20px;
 font-weight:700;
 box-shadow:0 2px 4px rgba(0,0,0,0.3);
+/* Equal padding from all sides - 12px */
+padding: 12px !important;
+margin: 0 !important;
+/* Override theme button styles */
+min-width: auto !important;
+min-height: auto !important;
+box-sizing: border-box !important;
 }
 
 .woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn:hover,
@@ -410,8 +785,41 @@ position:absolute !important;
 /* Override Elementor button styling for delete buttons */
 .elementor-kit-4523 .woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn,
 .elementor-kit-4523 .uploaded-images-grid .img-item .delete-btn {
-  padding: 0 !important;
+  padding: 12px !important;
   font-weight: 700 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Override theme padding inheritance for delete buttons - specific overrides */
+.woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn,
+.uploaded-images-grid .img-item .delete-btn {
+  /* Reset all inherited button styles that could cause layout issues */
+  padding: 12px !important;
+  margin: 0 !important;
+  border: none !important;
+  font-family: inherit !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+  text-indent: 0 !important;
+  text-shadow: none !important;
+  vertical-align: baseline !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+  overflow: visible !important;
+  outline: none !important;
+  resize: none !important;
+  box-sizing: border-box !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  -ms-appearance: none !important;
+  -o-appearance: none !important;
 }
 
 /* General button font weight override */
@@ -429,11 +837,108 @@ button {
     right:4px;
     font-size:16px;
     z-index:99999 !important;
+    /* Equal padding from all sides - 12px on mobile too */
+    padding: 12px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
   }
   .woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn::before,
   .uploaded-images-grid .img-item .delete-btn::before{
     font-size:16px;
     font-weight:700;
+  }
+}
+
+/* Additional theme-specific overrides for delete buttons */
+.woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn,
+.uploaded-images-grid .img-item .delete-btn {
+  /* Override any theme button padding that might be inherited - 12px equal padding */
+  padding: 12px !important;
+  margin: 0 !important;
+  /* Ensure the button maintains its circular shape */
+  min-width: auto !important;
+  min-height: auto !important;
+  /* Override any theme button styles */
+  background-clip: padding-box !important;
+  background-origin: padding-box !important;
+  background-size: auto !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  box-sizing: border-box !important;
+}
+
+/* Ultra-specific class for maximum theme resistance */
+.tryon-delete-btn {
+  padding: 12px !important;
+  margin: 0 !important;
+  border: none !important;
+  background: rgba(239, 68, 68, 0.95) !important;
+  color: #fff !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+  text-indent: 0 !important;
+  text-shadow: none !important;
+  vertical-align: baseline !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+  overflow: visible !important;
+  outline: none !important;
+  resize: none !important;
+  box-sizing: border-box !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  -ms-appearance: none !important;
+  -o-appearance: none !important;
+  min-width: auto !important;
+  min-height: auto !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  z-index: 99999 !important;
+  position: absolute !important;
+  top: 6px !important;
+  right: 6px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+}
+
+.tryon-delete-btn::before {
+  content: "×" !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+}
+
+.tryon-delete-btn:hover {
+  background: rgba(220, 38, 38, 1) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Mobile specific for tryon-delete-btn */
+@media (max-width: 600px) {
+  .tryon-delete-btn {
+    width: 18px !important;
+    height: 18px !important;
+    top: 4px !important;
+    right: 4px !important;
+    font-size: 16px !important;
+    padding: 12px !important;
+  }
+  
+  .tryon-delete-btn::before {
+    font-size: 16px !important;
   }
 }
 

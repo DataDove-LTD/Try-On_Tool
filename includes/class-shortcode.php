@@ -23,7 +23,8 @@
 /**
  * Test shortcode for TryOnTool API integration
  */
-class WooFitroomPreview_Shortcode {
+if (!class_exists('WooFitroomPreview_Shortcode')) {
+    class WooFitroomPreview_Shortcode {
     /**
      * Initialize the class
      */
@@ -219,6 +220,7 @@ class WooFitroomPreview_Shortcode {
             'message' => __('Successfully generated preview', 'woo-tryontool-preview'),
             'data' => $response,
         ));
+    }
     }
 }
 
