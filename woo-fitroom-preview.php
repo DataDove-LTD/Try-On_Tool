@@ -24,7 +24,7 @@
  * Plugin Name: Try-On Tool
  * Plugin URI: https://tryontool.com
  * Description: Connect WooCommerce with Try-On Tool for AI-generated virtual try-on previews
- * Version: 1.2.2
+ * Version: 1.2.3
  * Author: DataDove
  * Author URI: https://tryontool.com
  * Text Domain: woo-fitroom-preview
@@ -228,7 +228,7 @@ if ( ! ob_get_level() ) {
 
 // Define plugin constants only if not already defined
 if (!defined('WOO_FITROOM_PREVIEW_VERSION')) {
-    define('WOO_FITROOM_PREVIEW_VERSION', '1.2.2');
+    define('WOO_FITROOM_PREVIEW_VERSION', '1.2.3');
 }
 if (!defined('WOO_FITROOM_PREVIEW_PLUGIN_DIR')) {
     define('WOO_FITROOM_PREVIEW_PLUGIN_DIR', plugin_dir_path(__FILE__));

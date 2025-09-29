@@ -118,9 +118,23 @@ if (!class_exists('WooFitroomPreview_Product_Button')) {
                 data-product-image="<?php echo esc_url($product_image_url); ?>"
                 data-theme-detection="enabled"
                 style="margin-left: 10px !important;">
-            <?php _e('Try It On', 'woo-fitroom-preview'); ?>
+            <?php echo esc_html($this->get_button_text()); ?>
         </button>
         <?php
+    }
+
+    /**
+     * Get the button text based on the mode setting
+     */
+    private function get_button_text() {
+        $button_text_mode = get_option('WOO_FITROOM_button_text_mode', 'default');
+        
+        if ($button_text_mode === 'custom') {
+            $custom_text = get_option('WOO_FITROOM_custom_button_text', 'Try It On');
+            return !empty($custom_text) ? $custom_text : 'Try It On';
+        }
+        
+        return 'Try It On';
     }
 
     private function current_user_can_use_feature() {
@@ -238,14 +252,17 @@ if (!class_exists('WooFitroomPreview_Product_Button')) {
         <div id="woo-fitroom-preview-modal" class="woo-fitroom-preview-modal" style="display: none;" data-require-consent="<?php echo $require_consent ? '1' : '0'; ?>" data-show-extra-consents="<?php echo $show_extra_consents ? '1' : '0'; ?>">
             <div class="modal-content">
                 <span class="close">&times;</span>
-                <h2><?php _e('Try It On', 'woo-fitroom-preview'); ?></h2>
+                <h2><?php echo esc_html($this->get_button_text()); ?></h2>
 
                 <!-- Product image preview removed as per user request -->
                 
                 <?php if ( is_user_logged_in() ) : ?>
                 <div id="my_uploads_strip" class="my-uploads-strip" style="display:none; margin-bottom:12px;">
-                    <div class="strip-title" style="font-size:12px; color:#555; margin-bottom:8px;">
-                        <?php _e('My Uploads', 'woo-fitroom-preview'); ?>
+                    <div class="strip-title" style="font-size:12px; color:#555; margin-bottom:8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span><?php _e('My Uploads', 'woo-fitroom-preview'); ?></span>
+                        <button type="button" id="delete_all_images_btn" class="delete-all-btn" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: none;">
+                            <?php _e('Delete All', 'woo-fitroom-preview'); ?>
+                        </button>
                     </div>
                     <div id="my_uploads_list" class="strip-list"></div>
                 </div>
@@ -388,6 +405,7 @@ if (!class_exists('WooFitroomPreview_Product_Button')) {
                     'bottom_left' => get_option('WOO_FITROOM_border_radius_bottom_left', 50),
                     'bottom_right' => get_option('WOO_FITROOM_border_radius_bottom_right', 50)
                 ),
+                'custom_button_text' => $this->get_button_text(),
                 'i18n' => array(
                     'processing' => __('Generating preview...', 'woo-fitroom-preview'),
                     'error' => __('Error generating preview', 'woo-fitroom-preview'),
@@ -436,10 +454,30 @@ if (!class_exists('WooFitroomPreview_Product_Button')) {
                 // Site-wide consent registry
                 $consents   = get_option( 'WOO_FITROOM_consents', array() );
                 $user_obj   = wp_get_current_user();
+                
+                // Get additional consent data
+                $terms_consent = get_user_meta($uid, 'woo_fitroom_terms_consent', true);
+                $refund_consent = get_user_meta($uid, 'woo_fitroom_refund_consent', true);
+                
+                // Determine consolidated consent status
+                $require_extra_consents = get_option('WOO_FITROOM_require_extra_consents');
+                $consolidated_consent_date = $now_mysql; // Main consent is always given at this point
+                
+                // If extra consents are required, use the latest consent date
+                if ($require_extra_consents) {
+                    $consent_dates = array_filter([$now_mysql, $terms_consent, $refund_consent]);
+                    if (!empty($consent_dates)) {
+                        $consolidated_consent_date = max($consent_dates);
+                    }
+                }
+                
                 $consents[ $uid ] = array(
                     'user_id'          => $uid,
                     'email'            => $user_obj ? $user_obj->user_email : '',
-                    'consent_timestamp'=> $now_mysql,
+                    'consent_timestamp'=> $consolidated_consent_date,
+                    'terms_consent'    => $terms_consent ? $terms_consent : '',
+                    'refund_consent'   => $refund_consent ? $refund_consent : '',
+                    'last_login'       => get_user_meta($uid, 'last_login', true) ?: '',
                     // last_login added via the wp_login hook
                 );
                 update_option( 'WOO_FITROOM_consents', $consents, false );
@@ -464,6 +502,25 @@ if (!class_exists('WooFitroomPreview_Product_Button')) {
                     wp_send_json_error(array('message' => __('You must agree to the Refund Policy.', 'woo-fitroom-preview')));
                 }
                 update_user_meta($uid, 'woo_fitroom_refund_consent', current_time('mysql'));
+            }
+            
+            // Update consent registry with latest terms and refund consent data
+            $consents = get_option('WOO_FITROOM_consents', array());
+            if (isset($consents[$uid])) {
+                $consents[$uid]['terms_consent'] = get_user_meta($uid, 'woo_fitroom_terms_consent', true) ?: '';
+                $consents[$uid]['refund_consent'] = get_user_meta($uid, 'woo_fitroom_refund_consent', true) ?: '';
+                
+                // Update consolidated consent date to the latest consent given
+                $consent_dates = array_filter([
+                    $consents[$uid]['consent_timestamp'],
+                    $consents[$uid]['terms_consent'],
+                    $consents[$uid]['refund_consent']
+                ]);
+                if (!empty($consent_dates)) {
+                    $consents[$uid]['consent_timestamp'] = max($consent_dates);
+                }
+                
+                update_option('WOO_FITROOM_consents', $consents, false);
             }
         }
 
@@ -989,8 +1046,18 @@ add_action('wp_ajax_delete_user_uploaded_image', function() {
             require_once WOO_FITROOM_PREVIEW_PLUGIN_DIR . 'includes/class-wasabi-client.php';
         }
         
-        WooFITROOM_Wasabi::client();
+        // Check if Wasabi client can be initialized
+        $client = WooFITROOM_Wasabi::client();
+        if (!$client) {
+            error_log('Wasabi Delete Debug: Failed to initialize Wasabi client');
+            wp_send_json_error(array('message' => __('Unable to connect to storage service. Please check your internet connection and try again.', 'woo-fitroom-preview')));
+        }
+        
         $bucket = WooFITROOM_Wasabi::bucket();
+        if (!$bucket) {
+            error_log('Wasabi Delete Debug: Failed to get bucket name');
+            wp_send_json_error(array('message' => __('Storage configuration error. Please contact support.', 'woo-fitroom-preview')));
+        }
         
         // Extract the S3 object key from the full URL
         $pattern = '#https?://[^/]+/' . preg_quote($bucket, '#') . '/#';
@@ -1005,6 +1072,7 @@ add_action('wp_ajax_delete_user_uploaded_image', function() {
             error_log('Wasabi Delete Debug: Attempting to delete key: ' . $key);
             $result = WooFITROOM_Wasabi::delete($key);
             error_log('Wasabi Delete Debug: Delete result: ' . ($result ? 'success' : 'failed'));
+            
             if ($result) {
                 // Also clean up the transient for this image
                 $transient_key = 'WOO_FITROOM_image_deletion_' . md5($key);
@@ -1012,15 +1080,128 @@ add_action('wp_ajax_delete_user_uploaded_image', function() {
                 error_log('Wasabi Delete Debug: Cleaned up transient for key: ' . $key);
                 wp_send_json_success(array('message' => __('Image deleted successfully.', 'woo-fitroom-preview')));
             } else {
-                wp_send_json_error(array('message' => __('Failed to delete image from storage.', 'woo-fitroom-preview')));
+                error_log('Wasabi Delete Debug: Wasabi delete() returned false for key: ' . $key);
+                wp_send_json_error(array('message' => __('Failed to delete image from storage. The image may have already been deleted or there may be a connection issue. Please try again.', 'woo-fitroom-preview')));
             }
         } else {
             error_log('Wasabi Delete Debug: Could not parse key from URL: ' . $image_url);
-            wp_send_json_error(array('message' => __('Could not parse image URL.', 'woo-fitroom-preview')));
+            wp_send_json_error(array('message' => __('Invalid image URL format. Please refresh the page and try again.', 'woo-fitroom-preview')));
         }
     } catch (Exception $e) {
         error_log('Error deleting image: ' . $e->getMessage());
-        wp_send_json_error(array('message' => __('An error occurred while deleting the image.', 'woo-fitroom-preview')));
+        $error_message = __('An error occurred while deleting the image. Please check your internet connection and try again.', 'woo-fitroom-preview');
+        
+        // Provide more specific error messages based on the exception
+        if (strpos($e->getMessage(), 'connection') !== false || strpos($e->getMessage(), 'timeout') !== false) {
+            $error_message = __('Connection error. Please check your internet connection and try again.', 'woo-fitroom-preview');
+        } elseif (strpos($e->getMessage(), 'credentials') !== false || strpos($e->getMessage(), 'authentication') !== false) {
+            $error_message = __('Authentication error. Please contact support.', 'woo-fitroom-preview');
+        } elseif (strpos($e->getMessage(), 'permission') !== false || strpos($e->getMessage(), 'access') !== false) {
+            $error_message = __('Permission denied. Please contact support.', 'woo-fitroom-preview');
+        }
+        
+        wp_send_json_error(array('message' => $error_message));
+    }
+});
+
+// Add AJAX handler for deleting all user images
+add_action('wp_ajax_delete_all_user_images', function() {
+    check_ajax_referer('woo_fitroom_preview_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => __('You must be logged in to delete images.', 'woo-fitroom-preview')));
+    }
+    
+    $user_id = absint($_POST['user_id'] ?? 0);
+    
+    if (!$user_id) {
+        wp_send_json_error(array('message' => __('Invalid user ID.', 'woo-fitroom-preview')));
+    }
+    
+    // Get all user images
+    $user_images = WOO_FITROOM_get_user_uploaded_images($user_id);
+    
+    if (empty($user_images)) {
+        wp_send_json_success(array('message' => __('No images to delete.', 'woo-fitroom-preview'), 'deleted_count' => 0));
+    }
+    
+    // Delete all images from Wasabi
+    try {
+        // Ensure Wasabi client is initialized
+        if (!class_exists('WooFITROOM_Wasabi')) {
+            require_once WOO_FITROOM_PREVIEW_PLUGIN_DIR . 'includes/class-wasabi-client.php';
+        }
+        
+        // Check if Wasabi client can be initialized
+        $client = WooFITROOM_Wasabi::client();
+        if (!$client) {
+            error_log('Wasabi Delete All Debug: Failed to initialize Wasabi client');
+            wp_send_json_error(array('message' => __('Unable to connect to storage service. Please check your internet connection and try again.', 'woo-fitroom-preview')));
+        }
+        
+        $bucket = WooFITROOM_Wasabi::bucket();
+        if (!$bucket) {
+            error_log('Wasabi Delete All Debug: Failed to get bucket name');
+            wp_send_json_error(array('message' => __('Storage configuration error. Please contact support.', 'woo-fitroom-preview')));
+        }
+        
+        $deleted_count = 0;
+        $errors = array();
+        
+        foreach ($user_images as $image_url) {
+            // Extract the S3 object key from the full URL
+            $pattern = '#https?://[^/]+/' . preg_quote($bucket, '#') . '/#';
+            $key = preg_replace($pattern, '', $image_url);
+            
+            // Fallback: if the regex failed, fall back to the legacy str_replace
+            if ($key === $image_url) {
+                $key = str_replace('https://s3.eu-west-1.wasabisys.com/' . $bucket . '/', '', $image_url);
+            }
+            
+            if ($key && $key !== $image_url) {
+                error_log('Wasabi Delete All Debug: Attempting to delete key: ' . $key);
+                $result = WooFITROOM_Wasabi::delete($key);
+                
+                if ($result) {
+                    $deleted_count++;
+                    // Clean up the transient for this image
+                    $transient_key = 'WOO_FITROOM_image_deletion_' . md5($key);
+                    delete_transient($transient_key);
+                    error_log('Wasabi Delete All Debug: Successfully deleted key: ' . $key);
+                } else {
+                    $errors[] = $key;
+                    error_log('Wasabi Delete All Debug: Failed to delete key: ' . $key);
+                }
+            } else {
+                $errors[] = $image_url;
+                error_log('Wasabi Delete All Debug: Could not parse key from URL: ' . $image_url);
+            }
+        }
+        
+        if ($deleted_count > 0) {
+            $message = sprintf(__('%d images deleted successfully.', 'woo-fitroom-preview'), $deleted_count);
+            if (!empty($errors)) {
+                $message .= ' ' . sprintf(__('%d images could not be deleted due to connection issues. Please try again.', 'woo-fitroom-preview'), count($errors));
+            }
+            wp_send_json_success(array('message' => $message, 'deleted_count' => $deleted_count, 'errors' => $errors));
+        } else {
+            wp_send_json_error(array('message' => __('Failed to delete any images. Please check your internet connection and try again.', 'woo-fitroom-preview')));
+        }
+        
+    } catch (Exception $e) {
+        error_log('Error deleting all images: ' . $e->getMessage());
+        $error_message = __('An error occurred while deleting images. Please check your internet connection and try again.', 'woo-fitroom-preview');
+        
+        // Provide more specific error messages based on the exception
+        if (strpos($e->getMessage(), 'connection') !== false || strpos($e->getMessage(), 'timeout') !== false) {
+            $error_message = __('Connection error. Please check your internet connection and try again.', 'woo-fitroom-preview');
+        } elseif (strpos($e->getMessage(), 'credentials') !== false || strpos($e->getMessage(), 'authentication') !== false) {
+            $error_message = __('Authentication error. Please contact support.', 'woo-fitroom-preview');
+        } elseif (strpos($e->getMessage(), 'permission') !== false || strpos($e->getMessage(), 'access') !== false) {
+            $error_message = __('Permission denied. Please contact support.', 'woo-fitroom-preview');
+        }
+        
+        wp_send_json_error(array('message' => $error_message));
     }
 });
 

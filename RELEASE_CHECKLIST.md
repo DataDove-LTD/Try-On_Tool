@@ -1,9 +1,9 @@
-﻿# Release Checklist - Version 1.2.2
+﻿# Release Checklist - Version 1.2.3
 
 ## Pre-Release Tasks
 
 ### âœ… Version Updates
-- [x] Update version in `woo-fitroom-preview.php` (1.2.2)
+- [x] Update version in `woo-fitroom-preview.php` (1.2.3)
 - [x] Update `WOO_FITROOM_PREVIEW_VERSION` constant
 - [x] Create/update `CHANGELOG.md`
 - [x] Update `README.md` with current version
@@ -34,8 +34,8 @@
 
 ## Release Tasks
 
-### ðŸ“¦ Package Preparation
-- [ ] Create new zip file: `try-on_tool_plugin_v1.2.2.zip`
+### ðŸ"¦ Package Preparation
+- [ ] Create new zip file: `try-on_tool_plugin_v1.2.3.zip`
 - [ ] Ensure all files are included:
   - [ ] Main plugin file (`woo-fitroom-preview.php`)
   - [ ] All `includes/` classes
@@ -55,8 +55,8 @@
   - [ ] `WRITTEN_OFFER.txt`
   - [ ] License headers in all source files
 
-### ðŸ“‹ Distribution Files
-- [ ] `try-on_tool_plugin_v1.2.2.zip` (main plugin)
+### ðŸ"‹ Distribution Files
+- [ ] `try-on_tool_plugin_v1.2.3.zip` (main plugin)
 - [ ] `CHANGELOG.md` (release notes)
 - [ ] Updated documentation
 
@@ -81,20 +81,20 @@ git checkout main
 git pull origin main
 
 # Create release branch
-git checkout -b release/v1.2.2
+git checkout -b release/v1.2.3
 
 # Commit all changes
 git add .
-git commit -m "Prepare for v1.2.2 release"
+git commit -m "Prepare for v1.2.3 release"
 ```
 
 ### Step 2: Create Release Tag
 ```bash
 # Create annotated tag
-git tag -a v1.2.2 -m "Release version 1.2.2"
+git tag -a v1.2.3 -m "Release version 1.2.3"
 
 # Push tag to remote
-git push origin v1.2.2
+git push origin v1.2.3
 ```
 
 ### Step 3: Merge to Main
@@ -103,25 +103,44 @@ git push origin v1.2.2
 git checkout main
 
 # Merge release branch
-git merge release/v1.2.2
+git merge release/v1.2.3
 
 # Push to main
 git push origin main
 
 # Delete release branch (optional)
-git branch -d release/v1.2.2
-git push origin --delete release/v1.2.2
+git branch -d release/v1.2.3
+git push origin --delete release/v1.2.3
 ```
 
 ### Step 4: Create GitHub Release
 1. Go to GitHub repository
 2. Click "Releases" â†’ "Create a new release"
-3. Select the `v1.2.2` tag
-4. Add release title: "Try-On Tool v1.2.2"
+3. Select the `v1.2.3` tag
+4. Add release title: "Try-On Tool v1.2.3"
 5. Add release notes from CHANGELOG.md
-6. Upload the zip file: `try-on_tool_plugin_v1.2.2.zip`
+6. Upload the zip file: `try-on_tool_plugin_v1.2.3.zip`
 
 ## Release Notes Summary
+
+**Version 1.2.3**
+- **Added:** Custom Button Text Feature - Allow users to customize "Try It On" button text (max 15 characters)
+- **Added:** Excel Export for Consent Records - Export all user consent records to CSV/Excel format
+- **Added:** "Delete All Images" Feature - Bulk deletion of all user uploaded images with confirmation popup
+- **Added:** Character Counter - Real-time character counter with color-coded feedback for button text
+- **Added:** Consolidated Consent Logic - Single consent date calculation based on latest of all required consents
+- **Added:** Migration System - Automatic migration of existing consent records to consolidated format
+- **Added:** Enhanced Error Messages - Specific error messages for different deletion failure scenarios
+- **Added:** Loading States - Visual feedback during image deletion operations
+- **Changed:** Admin Dashboard Styling - TryOnTool orange color theme (#FF6E0E) replacing purplish gradients
+- **Changed:** Radio Button Styling - Orange color for radio button ::before pseudo-elements
+- **Changed:** Consent Display - Simplified to show single "Consent Given" date instead of separate dates
+- **Changed:** Image Deletion Behavior - Images only removed from UI if successfully deleted from Wasabi
+- **Fixed:** Data Integrity - Images remain in UI until successfully deleted from storage
+- **Fixed:** Connection Error Handling - Specific error messages for connection issues
+- **Fixed:** Authentication Error Handling - Clear messaging for credential and permission issues
+- **Fixed:** Button State Management - Prevents multiple clicks during processing
+- **Fixed:** Mobile Responsiveness - Enhanced mobile experience for all new features
 
 **Version 1.2.2**
 - **Added:** Enhanced theme compatibility for Astra, OceanWP, GeneratePress, and Storefront

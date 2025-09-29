@@ -9,8 +9,8 @@ We follow [Semantic Versioning](https://semver.org/) format: `MAJOR.MINOR.PATCH`
 - **MINOR** (1.0.x): New features, backward compatible
 - **PATCH** (1.0.1): Bug fixes, backward compatible
 
-### Current Version: 1.2.2
-- **Previous:** 1.1.0 (Feature release)
+### Current Version: 1.2.3
+- **Previous:** 1.2.2 (Patch release)
 - **Next Planned:** 1.3.0 (feature release)
 
 ## Git Workflow
@@ -31,7 +31,7 @@ git checkout main
 git pull origin main
 
 # Create release branch
-git checkout -b release/v1.2.2
+git checkout -b release/v1.2.3
 
 # Make version updates
 # - Update version in woo-fitroom-preview.php
@@ -40,7 +40,7 @@ git checkout -b release/v1.2.2
 
 # Commit changes
 git add .
-git commit -m "Prepare for v1.2.2 release"
+git commit -m "Prepare for v1.2.3 release"
 ```
 
 #### 2. Testing & Validation
@@ -53,10 +53,10 @@ git commit -m "Prepare for v1.2.2 release"
 #### 3. Create Release Tag
 ```bash
 # Create annotated tag
-git tag -a v1.2.2 -m "Release version 1.2.2"
+git tag -a v1.2.3 -m "Release version 1.2.3"
 
 # Push tag to remote
-git push origin v1.2.2
+git push origin v1.2.3
 ```
 
 #### 4. Merge to Main
@@ -65,31 +65,31 @@ git push origin v1.2.2
 git checkout main
 
 # Merge release branch
-git merge release/v1.2.2
+git merge release/v1.2.3
 
 # Push to main
 git push origin main
 
 # Delete release branch (optional)
-git branch -d release/v1.2.2
-git push origin --delete release/v1.2.2
+git branch -d release/v1.2.3
+git push origin --delete release/v1.2.3
 ```
 
 #### 5. Create GitHub Release
 1. Go to GitHub repository
 2. Click "Releases" â†’ "Create a new release"
-3. Select the `v1.2.2` tag
-4. Add release title: "Try-On Tool v1.2.2"
+3. Select the `v1.2.3` tag
+4. Add release title: "Try-On Tool v1.2.3"
 5. Add release notes from CHANGELOG.md
-6. Upload the zip file: `try-on_tool_plugin_v1.2.2.zip`
+6. Upload the zip file: `try-on_tool_plugin_v1.2.3.zip`
 
 ## Version Update Checklist
 
 ### Files to Update for Each Release
 
 #### 1. Main Plugin File (`woo-fitroom-preview.php`)
-- [ ] Update version in plugin header: `Version: 1.2.2`
-- [ ] Update constant: `define('WOO_FITROOM_PREVIEW_VERSION', '1.2.2');`
+- [ ] Update version in plugin header: `Version: 1.2.3`
+- [ ] Update constant: `define('WOO_FITROOM_PREVIEW_VERSION', '1.2.3');`
 - [ ] Update modification date comment
 
 #### 2. Documentation Files
@@ -175,6 +175,7 @@ git push origin --delete feature/new-feature
 | 1.2.0 | 2025-09-08 | Minor | Feature improvements & fixes |
 | 1.2.1 | 2025-09-15 | Patch | Bug fixes & HPOS compatibility |
 | 1.2.2 | 2025-09-24 | Patch | Enhanced theme compatibility & admin improvements |
+| 1.2.3 | 2025-09-29 | Minor | Custom button text, Excel export, enhanced image deletion & UI improvements |
 
 ## Next Release Planning
 
@@ -206,21 +207,21 @@ For critical bugs in production:
 ```bash
 # Create hotfix branch from main
 git checkout main
-git checkout -b hotfix/v1.2.2
+git checkout -b hotfix/v1.2.3
 
 # Make minimal fix
-# Update version to 1.2.2
+# Update version to 1.2.3
 # Update CHANGELOG.md
 
 # Commit and tag
 git add .
 git commit -m "Hotfix: Critical bug fix"
-git tag -a v1.2.2 -m "Hotfix release v1.2.2"
+git tag -a v1.2.3 -m "Hotfix release v1.2.3"
 
 # Push and merge
-git push origin hotfix/v1.2.2
-git push origin v1.2.2
+git push origin hotfix/v1.2.3
+git push origin v1.2.3
 git checkout main
-git merge hotfix/v1.2.2
+git merge hotfix/v1.2.3
 git push origin main
 ``` 

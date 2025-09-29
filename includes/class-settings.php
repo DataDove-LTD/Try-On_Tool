@@ -44,6 +44,8 @@ if (!class_exists('WooFitroomPreview_Settings')) {
         add_action('wp_ajax_WOO_FITROOM_reset_free_plan', array($this, 'ajax_reset_free_plan'));
         // Consent records fetch (admin)
         add_action('wp_ajax_WOO_FITROOM_get_consents', array($this, 'ajax_get_consents'));
+        // Consent export (admin)
+        add_action('wp_ajax_WOO_FITROOM_export_consents', array($this, 'ajax_export_consents'));
         
 
         
@@ -270,6 +272,28 @@ if (!class_exists('WooFitroomPreview_Settings')) {
                 'default' => 50,
             )
         );
+
+        // APPEARANCE SETTINGS - Button text mode
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_button_text_mode',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => array($this, 'sanitize_button_text_mode'),
+                'default' => 'default',
+            )
+        );
+
+        // APPEARANCE SETTINGS - Custom button text
+        register_setting(
+            'WOO_FITROOM_preview_options',
+            'WOO_FITROOM_custom_button_text',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => array($this, 'sanitize_button_text'),
+                'default' => 'Try It On',
+            )
+        );
     }
 
     /**
@@ -383,6 +407,40 @@ if (!class_exists('WooFitroomPreview_Settings')) {
     }
 
     /**
+     * Sanitize button text mode setting
+     */
+    public function sanitize_button_text_mode( $input ) {
+        $allowed_values = array( 'default', 'custom' );
+        $sanitized = sanitize_text_field( $input );
+        
+        if ( in_array( $sanitized, $allowed_values ) ) {
+            return $sanitized;
+        }
+        
+        return 'default';
+    }
+
+    /**
+     * Sanitize button text setting
+     */
+    public function sanitize_button_text( $input ) {
+        // Sanitize the text
+        $sanitized = sanitize_text_field( $input );
+        
+        // Limit to 15 characters
+        if ( strlen( $sanitized ) > 15 ) {
+            $sanitized = substr( $sanitized, 0, 15 );
+        }
+        
+        // If empty after sanitization, return default
+        if ( empty( $sanitized ) ) {
+            return 'Try It On';
+        }
+        
+        return $sanitized;
+    }
+
+    /**
      * Set default consent value only once when plugin is first activated
      */
     public function set_consent_default_once() {
@@ -402,9 +460,54 @@ if (!class_exists('WooFitroomPreview_Settings')) {
         
         // Mark that we've initialized the default value
         update_option('WOO_FITROOM_consent_default_initialized', true);
+        
+        // Migrate existing consent records to include new fields
+        $this->migrate_consent_records();
     }
-    
 
+    /**
+     * Migrate existing consent records to include new fields
+     */
+    public function migrate_consent_records() {
+        $consents = get_option('WOO_FITROOM_consents', array());
+        $updated = false;
+        
+        foreach ($consents as $user_id => &$consent_data) {
+            // Add missing fields if they don't exist
+            if (!isset($consent_data['terms_consent'])) {
+                $consent_data['terms_consent'] = get_user_meta($user_id, 'woo_fitroom_terms_consent', true) ?: '';
+                $updated = true;
+            }
+            if (!isset($consent_data['refund_consent'])) {
+                $consent_data['refund_consent'] = get_user_meta($user_id, 'woo_fitroom_refund_consent', true) ?: '';
+                $updated = true;
+            }
+            if (!isset($consent_data['last_login'])) {
+                $consent_data['last_login'] = get_user_meta($user_id, 'last_login', true) ?: '';
+                $updated = true;
+            }
+            
+            // Update consolidated consent date if needed
+            if (isset($consent_data['consent_timestamp'])) {
+                $consent_dates = array_filter([
+                    $consent_data['consent_timestamp'],
+                    $consent_data['terms_consent'],
+                    $consent_data['refund_consent']
+                ]);
+                if (!empty($consent_dates)) {
+                    $new_consolidated_date = max($consent_dates);
+                    if ($consent_data['consent_timestamp'] !== $new_consolidated_date) {
+                        $consent_data['consent_timestamp'] = $new_consolidated_date;
+                        $updated = true;
+                    }
+                }
+            }
+        }
+        
+        if ($updated) {
+            update_option('WOO_FITROOM_consents', $consents, false);
+        }
+    }
     
     /**
      * AJAX: Return consent records for admin table
@@ -421,6 +524,65 @@ if (!class_exists('WooFitroomPreview_Settings')) {
         // Return as numerically-indexed array for easier JS loop
         $out = array_values( $consents );
         wp_send_json_success( $out );
+    }
+
+    /**
+     * AJAX: Export consent records as Excel/CSV file
+     */
+    public function ajax_export_consents() {
+        check_ajax_referer( 'FITROOM_export_consents', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( __( 'Permission denied.', 'woo-fitroom-preview' ) );
+        }
+
+        $consents = get_option( 'WOO_FITROOM_consents', array() );
+        
+        // Set headers for file download
+        $filename = 'tryon-consent-records-' . date('Y-m-d-H-i-s') . '.csv';
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        // Create output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add BOM for Excel compatibility
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // CSV headers
+        $headers = array(
+            'User ID',
+            'Email',
+            'Consent Given',
+            'Last Login'
+        );
+        fputcsv($output, $headers);
+
+        // Process each consent record
+        foreach ($consents as $user_id => $consent_data) {
+            $user_id = intval($user_id);
+            $email = isset($consent_data['email']) ? $consent_data['email'] : '';
+            $consent_date = isset($consent_data['consent_timestamp']) ? $consent_data['consent_timestamp'] : '';
+            $last_login = isset($consent_data['last_login']) ? $consent_data['last_login'] : '';
+
+            // Format dates for better readability
+            $consent_formatted = $consent_date ? date('Y-m-d H:i:s', strtotime($consent_date)) : 'Not Given';
+            $last_login_formatted = $last_login ? date('Y-m-d H:i:s', strtotime($last_login)) : 'Never';
+
+            $row = array(
+                $user_id,
+                $email,
+                $consent_formatted,
+                $last_login_formatted
+            );
+            
+            fputcsv($output, $row);
+        }
+
+        fclose($output);
+        exit;
     }
 
     /**

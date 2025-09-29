@@ -43,6 +43,9 @@
 
         // Check if custom color is enabled
         const useCustomColor = WooFitroomPreview && WooFitroomPreview.use_custom_color === '0';
+        console.log('Try-On Tool: use_custom_color value:', WooFitroomPreview ? WooFitroomPreview.use_custom_color : 'undefined');
+        console.log('Try-On Tool: useCustomColor result:', useCustomColor);
+        console.log('Try-On Tool: custom_color value:', WooFitroomPreview ? WooFitroomPreview.custom_color : 'undefined');
         
         if (useCustomColor && WooFitroomPreview.custom_color) {
             // Apply custom color
@@ -54,14 +57,14 @@
                 textHover: '#ffffff',
                 border: customColor,
                 borderHover: darkenColor(customColor, 20),
-                borderRadius: '3px',
-                padding: '12px 20px',
                 fontSize: '14px',
                 fontWeight: '600'
             };
             
             buttons.forEach(button => {
                 applyCustomColorsToButton(button, customColors);
+                console.log('Try-On Tool: Button after custom color application:', button);
+                console.log('Try-On Tool: Button computed styles:', window.getComputedStyle(button));
             });
             
             console.log('Try-On Tool: Custom colors applied:', customColors);
@@ -473,7 +476,18 @@
     }
 
     function applyCustomColorsToButton(button, colors) {
-        // Set CSS custom properties for custom color
+        console.log('Try-On Tool: Applying custom colors to button:', button, colors);
+        
+        // First, detect theme colors to get theme border radius and padding
+        const themeColors = detectThemeColors();
+        if (themeColors.borderRadius) {
+            button.style.setProperty('--tryon-theme-radius', themeColors.borderRadius);
+        }
+        if (themeColors.padding) {
+            button.style.setProperty('--tryon-theme-padding', themeColors.padding);
+        }
+        
+        // Only apply color-related custom properties
         button.style.setProperty('--tryon-custom-color', colors.primary);
         button.style.setProperty('--tryon-custom-color-hover', colors.primaryHover);
         button.style.setProperty('--tryon-theme-bg', colors.primary);
@@ -482,13 +496,21 @@
         button.style.setProperty('--tryon-theme-text-hover', colors.textHover);
         button.style.setProperty('--tryon-theme-border', colors.border);
         button.style.setProperty('--tryon-theme-border-hover', colors.borderHover);
-        button.style.setProperty('--tryon-theme-radius', colors.borderRadius);
-        // Padding is handled separately by applyButtonPadding()
-        button.style.setProperty('--tryon-theme-font-size', colors.fontSize);
-        button.style.setProperty('--tryon-theme-font-weight', colors.fontWeight);
         button.style.setProperty('--tryon-theme-focus', colors.primary);
         
-        // Apply padding and border radius based on admin settings
+        // Only apply font properties if they're not inherited from theme
+        if (WooFitroomPreview && WooFitroomPreview.use_custom_font !== '1') {
+        button.style.setProperty('--tryon-theme-font-size', colors.fontSize);
+        button.style.setProperty('--tryon-theme-font-weight', colors.fontWeight);
+        }
+        
+        console.log('Try-On Tool: CSS custom properties set:', {
+            '--tryon-custom-color': button.style.getPropertyValue('--tryon-custom-color'),
+            '--tryon-theme-bg': button.style.getPropertyValue('--tryon-theme-bg'),
+            '--tryon-theme-text': button.style.getPropertyValue('--tryon-theme-text')
+        });
+        
+        // Apply padding and border radius based on admin settings (these functions check the settings)
         applyButtonPadding(button);
         applyButtonBorderRadius(button);
     }
@@ -759,8 +781,11 @@
                             // Pre-select first image
                             $('#saved_user_image_url').val(images[0]);
                             list.find('.thumb').first().addClass('selected');
+                            // Show delete all button if there are images
+                            $('#delete_all_images_btn').show();
                         } else {
                             $('#my_uploads_strip').hide();
+                            $('#delete_all_images_btn').hide();
                         }
                     }
                 });
@@ -892,6 +917,13 @@
             showDeleteConfirmation(imageUrl);
         });
 
+        // Handle delete all button clicks
+        $(document).on('click', '#delete_all_images_btn', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            showDeleteAllConfirmation();
+        });
+
         // Delete confirmation popup functions
         function showDeleteConfirmation(imageUrl) {
             const popup = $(`
@@ -929,9 +961,51 @@
             });
         }
 
+        // Delete all confirmation popup function
+        function showDeleteAllConfirmation() {
+            const popup = $(`
+                <div class="delete-confirmation-popup">
+                    <div class="delete-confirmation-content">
+                        <h3>${__('Delete All Images', 'woo-fitroom-preview')}</h3>
+                        <p>${__('Are you sure you want to delete ALL your uploaded images permanently? This action cannot be undone.', 'woo-fitroom-preview')}</p>
+                        <div class="delete-confirmation-buttons">
+                            <button class="delete-cancel-btn">${__('Cancel', 'woo-fitroom-preview')}</button>
+                            <button class="delete-confirm-btn delete-all-confirm-btn">${__('Delete All', 'woo-fitroom-preview')}</button>
+                        </div>
+                    </div>
+                </div>
+            `);
+            
+            $('body').append(popup);
+            
+            // Handle cancel
+            popup.on('click', '.delete-cancel-btn', function(){
+                popup.remove();
+            });
+            
+            // Handle confirm
+            popup.on('click', '.delete-all-confirm-btn', function(){
+                deleteAllImages();
+                popup.remove();
+            });
+            
+            // Close on background click
+            popup.on('click', function(e){
+                if (e.target === this) {
+                    popup.remove();
+                }
+            });
+        }
+
         // Delete image function
         function deleteImage(imageUrl) {
             console.log('Delete Image: Attempting to delete URL:', imageUrl);
+            
+            // Show loading state on the delete button
+            const deleteBtn = $(`.delete-btn[data-url="${imageUrl}"]`);
+            const originalText = deleteBtn.attr('title');
+            deleteBtn.attr('title', __('Deleting...', 'woo-fitroom-preview')).prop('disabled', true);
+            
             $.ajax({
                 url: WooFitroomPreview.ajaxurl,
                 type: 'POST',
@@ -943,8 +1017,12 @@
                 },
                 success: function(response) {
                     console.log('Delete Image: Server response:', response);
+                    
+                    // Reset button state
+                    deleteBtn.attr('title', originalText).prop('disabled', false);
+                    
                     if (response.success) {
-                        // Remove the image from both inline strip and modal grid
+                        // Only remove the image from UI if deletion was successful
                         $(`.thumb[data-url="${imageUrl}"]`).remove();
                         $(`.img-item img[data-url="${imageUrl}"]`).closest('.img-item').remove();
                         
@@ -957,12 +1035,95 @@
                         showSuccessPopup(__('Image deleted successfully', 'woo-fitroom-preview'));
                     } else {
                         console.error('Delete Image: Server error:', response.data.message);
-                        showErrorPopup(response.data.message || __('Failed to delete image', 'woo-fitroom-preview'));
+                        // Show error message but keep image in UI
+                        showErrorPopup(response.data.message || __('Failed to delete image. Please try again.', 'woo-fitroom-preview'));
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Delete Image: AJAX error:', {xhr, status, error});
-                    showErrorPopup(__('Error communicating with server', 'woo-fitroom-preview'));
+                    
+                    // Reset button state
+                    deleteBtn.attr('title', originalText).prop('disabled', false);
+                    
+                    // Show error message but keep image in UI
+                    let errorMessage = __('Error communicating with server. Please check your internet connection and try again.', 'woo-fitroom-preview');
+                    
+                    if (xhr.status === 0) {
+                        errorMessage = __('No internet connection. Please check your connection and try again.', 'woo-fitroom-preview');
+                    } else if (xhr.status === 500) {
+                        errorMessage = __('Server error. Please try again later.', 'woo-fitroom-preview');
+                    } else if (xhr.status === 404) {
+                        errorMessage = __('Service not available. Please try again later.', 'woo-fitroom-preview');
+                    }
+                    
+                    showErrorPopup(errorMessage);
+                }
+            });
+        }
+
+        // Delete all images function
+        function deleteAllImages() {
+            console.log('Delete All Images: Attempting to delete all images for user:', WooFitroomPreview.user_id);
+            
+            // Show loading state on the delete all button
+            const deleteAllBtn = $('#delete_all_images_btn');
+            const originalText = deleteAllBtn.text();
+            deleteAllBtn.text(__('Deleting...', 'woo-fitroom-preview')).prop('disabled', true);
+            
+            $.ajax({
+                url: WooFitroomPreview.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'delete_all_user_images',
+                    user_id: WooFitroomPreview.user_id,
+                    nonce: WooFitroomPreview.nonce
+                },
+                success: function(response) {
+                    console.log('Delete All Images: Server response:', response);
+                    
+                    // Reset button state
+                    deleteAllBtn.text(originalText).prop('disabled', false);
+                    
+                    if (response.success) {
+                        // Only clear images from UI if deletion was successful
+                        $('#my_uploads_list').empty();
+                        $('#my_uploads_strip').hide();
+                        $('#delete_all_images_btn').hide();
+                        
+                        // Clear any modal grid if open
+                        $('.uploaded-images-grid').empty();
+                        
+                        // Clear saved image selection
+                        $('#saved_user_image_url').val('');
+                        $('#selected-photo-name').text('');
+                        
+                        // Show success message
+                        const message = response.data.message || __('All images deleted successfully', 'woo-fitroom-preview');
+                        showSuccessPopup(message);
+                    } else {
+                        console.error('Delete All Images: Server error:', response.data.message);
+                        // Show error message but keep images in UI
+                        showErrorPopup(response.data.message || __('Failed to delete all images. Please try again.', 'woo-fitroom-preview'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Delete All Images: AJAX error:', {xhr, status, error});
+                    
+                    // Reset button state
+                    deleteAllBtn.text(originalText).prop('disabled', false);
+                    
+                    // Show error message but keep images in UI
+                    let errorMessage = __('Error communicating with server. Please check your internet connection and try again.', 'woo-fitroom-preview');
+                    
+                    if (xhr.status === 0) {
+                        errorMessage = __('No internet connection. Please check your connection and try again.', 'woo-fitroom-preview');
+                    } else if (xhr.status === 500) {
+                        errorMessage = __('Server error. Please try again later.', 'woo-fitroom-preview');
+                    } else if (xhr.status === 404) {
+                        errorMessage = __('Service not available. Please try again later.', 'woo-fitroom-preview');
+                    }
+                    
+                    showErrorPopup(errorMessage);
                 }
             });
         }
@@ -1000,8 +1161,11 @@
                             $('#saved_user_image_url').val(images[0]);
                             list.find('.thumb').first().addClass('selected');
                         }
+                        // Show delete all button if there are images
+                        $('#delete_all_images_btn').show();
                     } else {
                         $('#my_uploads_strip').hide();
+                        $('#delete_all_images_btn').hide();
                     }
                 }
             });

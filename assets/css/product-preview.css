@@ -36,7 +36,7 @@
 
 /* Theme-aware color tokens (fallback to WP primary or a sensible blue) */
 .woo-fitroom-preview-modal{
-  --tryon-primary: var(--wp--preset--color--primary, #fb5607);
+  --tryon-primary: var(--wp--preset--color--primary, #007cba);
   --tryon-primary-20: color-mix(in srgb, var(--tryon-primary) 20%, transparent);
   --tryon-primary-25: color-mix(in srgb, var(--tryon-primary) 25%, transparent);
   --tryon-soft-bg: color-mix(in srgb, var(--tryon-primary) 6%, white);
@@ -45,32 +45,71 @@
 /* Try-On Button Theme Integration */
 .woo-fitroom-preview-button {
   /* Base button styling - will be overridden by theme detection or custom color */
-  background: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba));
-  color: var(--tryon-theme-text, #ffffff);
-  border: var(--tryon-theme-border-width, 1px) var(--tryon-theme-border-style, solid) var(--tryon-theme-border, var(--tryon-custom-color, #007cba));
-  border-radius: var(--tryon-custom-border-radius, var(--tryon-theme-radius, 3px));
-  padding: var(--tryon-custom-padding, var(--tryon-theme-padding, 12px 20px));
-  font-size: var(--tryon-theme-font-size, 14px);
-  font-weight: var(--tryon-theme-font-weight, 600);
-  text-decoration: none;
-  display: inline-block;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-left: 10px;
-  min-height: 44px;
-  line-height: var(--tryon-theme-line-height, 1.4);
-  text-align: center;
-  box-sizing: border-box;
-  white-space: nowrap; /* Prevent text wrapping */
-  min-width: auto; /* Allow natural width */
-  text-transform: var(--tryon-theme-text-transform, none);
-  letter-spacing: var(--tryon-theme-letter-spacing, normal);
-  box-shadow: var(--tryon-theme-box-shadow, none);
+  background: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) !important;
+  color: var(--tryon-theme-text, #ffffff) !important;
+  border: var(--tryon-theme-border-width, 1px) var(--tryon-theme-border-style, solid) var(--tryon-theme-border, var(--tryon-custom-color, #007cba)) !important;
+  border-radius: var(--tryon-custom-border-radius, var(--tryon-theme-radius, 3px)) !important;
+  padding: var(--tryon-custom-padding, var(--tryon-theme-padding, 12px 20px)) !important;
+  font-size: var(--tryon-theme-font-size, 14px) !important;
+  font-weight: var(--tryon-theme-font-weight, 600) !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  margin-left: 10px !important;
+  min-height: 44px !important;
+  line-height: var(--tryon-theme-line-height, 1.4) !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important; /* Prevent text wrapping */
+  min-width: auto !important; /* Allow natural width */
+  text-transform: var(--tryon-theme-text-transform, none) !important;
+  letter-spacing: var(--tryon-theme-letter-spacing, normal) !important;
+  box-shadow: var(--tryon-theme-box-shadow, none) !important;
 }
 
 /* Ensure main product page button keeps original font size */
 .woocommerce .woo-fitroom-preview-button {
   font-size: var(--tryon-theme-font-size, 14px) !important;
+}
+
+/* Override theme styles with higher specificity */
+.woocommerce .woo-fitroom-preview-button,
+.woocommerce div.product .woo-fitroom-preview-button,
+.woocommerce.single-product .woo-fitroom-preview-button,
+body .woo-fitroom-preview-button {
+  background: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) !important;
+  color: var(--tryon-theme-text, #ffffff) !important;
+  border: var(--tryon-theme-border-width, 1px) var(--tryon-theme-border-style, solid) var(--tryon-theme-border, var(--tryon-custom-color, #007cba)) !important;
+  border-radius: var(--tryon-custom-border-radius, var(--tryon-theme-radius, 3px)) !important;
+  padding: var(--tryon-custom-padding, var(--tryon-theme-padding, 12px 20px)) !important;
+  font-size: var(--tryon-theme-font-size, 14px) !important;
+  font-weight: var(--tryon-theme-font-weight, 600) !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  margin-left: 10px !important;
+  min-height: 44px !important;
+  line-height: var(--tryon-theme-line-height, 1.4) !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  min-width: auto !important;
+  text-transform: var(--tryon-theme-text-transform, none) !important;
+  letter-spacing: var(--tryon-theme-letter-spacing, normal) !important;
+  box-shadow: var(--tryon-theme-box-shadow, none) !important;
+}
+
+.woocommerce .woo-fitroom-preview-button:hover,
+.woocommerce div.product .woo-fitroom-preview-button:hover,
+.woocommerce.single-product .woo-fitroom-preview-button:hover,
+body .woo-fitroom-preview-button:hover {
+  background: var(--tryon-theme-bg-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  color: var(--tryon-theme-text-hover, #ffffff) !important;
+  border-color: var(--tryon-theme-border-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--tryon-theme-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15)) !important;
 }
 
 /* Fix for sticky banner buttons - ensure proper width and prevent text wrapping */
@@ -320,21 +359,21 @@
 }
 
 .woo-fitroom-preview-button:hover {
-  background: var(--tryon-theme-bg-hover, var(--tryon-custom-color-hover, #005a87));
-  color: var(--tryon-theme-text-hover, #ffffff);
-  border-color: var(--tryon-theme-border-hover, var(--tryon-custom-color-hover, #005a87));
-  transform: translateY(-1px);
-  box-shadow: var(--tryon-theme-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15));
+  background: var(--tryon-theme-bg-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  color: var(--tryon-theme-text-hover, #ffffff) !important;
+  border-color: var(--tryon-theme-border-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--tryon-theme-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15)) !important;
 }
 
 .woo-fitroom-preview-button:focus {
-  outline: 2px solid var(--tryon-theme-focus, #007cba);
-  outline-offset: 2px;
+  outline: 2px solid var(--tryon-theme-focus, #007cba) !important;
+  outline-offset: 2px !important;
 }
 
 .woo-fitroom-preview-button:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(0) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Mobile responsive button */
@@ -1175,6 +1214,34 @@ display: block !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
   }
+}
+
+/* Delete All Button Styling */
+.delete-all-btn {
+  background: #dc2626 !important;
+  color: white !important;
+  border: none !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.delete-all-btn:hover {
+  background: #b91c1c !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+.delete-all-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Delete confirmation popup */

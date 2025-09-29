@@ -5,6 +5,44 @@ All notable changes to the Try-On Tool plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2025-09-29
+### Added
+- Custom Button Text Feature: Allow users to customize "Try It On" button text (max 15 characters)
+- Excel Export for Consent Records: Export all user consent records to CSV/Excel format
+- "Delete All Images" Feature: Bulk deletion of all user uploaded images with confirmation popup
+- Character Counter: Real-time character counter with color-coded feedback for button text
+- Consolidated Consent Logic: Single consent date calculation based on latest of all required consents
+- Migration System: Automatic migration of existing consent records to consolidated format
+- Enhanced Error Messages: Specific error messages for different deletion failure scenarios
+- Loading States: Visual feedback during image deletion operations
+- Security Enhancements: Nonce protection and capability checks for export functionality
+- UI Improvements: Dynamic button visibility and better user experience
+
+### Changed
+- Admin Dashboard Styling: TryOnTool orange color theme (#FF6E0E) replacing purplish gradients
+- Radio Button Styling: Orange color for radio button ::before pseudo-elements
+- Consent Display: Simplified to show single "Consent Given" date instead of separate dates
+- Image Deletion Behavior: Images only removed from UI if successfully deleted from Wasabi
+- Error Handling: Enhanced error handling for all image deletion scenarios
+- CSS Specificity: Enhanced styling with better theme integration
+- User Experience: Improved confirmation popups and clear success/error messaging
+
+### Fixed
+- Data Integrity: Images remain in UI until successfully deleted from storage
+- Connection Error Handling: Specific error messages for connection issues
+- Authentication Error Handling: Clear messaging for credential and permission issues
+- Button State Management: Prevents multiple clicks during processing
+- Mobile Responsiveness: Enhanced mobile experience for all new features
+- Accessibility: Proper form labels and keyboard navigation maintained
+
+### Technical
+- AJAX Integration: Seamless export functionality with new tab opening
+- Wasabi Integration: Proper S3 deletion with error handling
+- WordPress Settings API: Proper setting registration and sanitization
+- Error Logging: Comprehensive logging for debugging
+- Performance: Efficient data processing for large datasets
+- Security: Proper validation and sanitization for all new features
+
 ## [1.2.2] - 2025-09-24
 ### Added
 - Enhanced theme compatibility system for Astra, OceanWP, GeneratePress, and Storefront

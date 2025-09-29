@@ -1,0 +1,896 @@
+/**
+ * Modern Admin Settings Styling for TryOnTool Plugin
+ * 
+ * @package Try-On Tool
+ * @copyright 2025 DataDove LTD
+ * @license GPL-2.0-only
+ */
+
+/* ==========================================================================
+   MODERN ADMIN LAYOUT
+   ========================================================================== */
+
+.tryon-admin-wrap {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.tryon-admin-header {
+    background: linear-gradient(135deg, #FF6E0E 0%, #E55A0C 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.tryon-admin-header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================================================
+   MODERN TAB NAVIGATION
+   ========================================================================== */
+
+.tryon-tab-wrapper {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.tryon-nav-tab {
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    padding: 16px 24px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tryon-nav-tab:hover {
+    background: #e9ecef;
+    color: #495057;
+    text-decoration: none;
+}
+
+.tryon-nav-tab.tryon-nav-tab-active {
+    background: #fff;
+    color: #FF6E0E;
+    border-bottom: 3px solid #FF6E0E;
+    font-weight: 600;
+}
+
+.tryon-nav-tab.tryon-nav-tab-active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #FF6E0E;
+}
+
+/* ==========================================================================
+   MODERN TOGGLE SWITCHES
+   ========================================================================== */
+
+.tryon-toggle-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+}
+
+.tryon-toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+    left: -9999px;
+    pointer-events: none;
+}
+
+.tryon-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 32px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.tryon-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tryon-toggle-input:checked + .tryon-toggle-slider {
+    background-color: #FF6E0E;
+}
+
+.tryon-toggle-input:checked + .tryon-toggle-slider:before {
+    transform: translateX(28px);
+}
+
+.tryon-toggle-input:focus + .tryon-toggle-slider {
+    box-shadow: 0 0 0 3px rgba(255, 110, 14, 0.25);
+}
+
+/* ==========================================================================
+   MODERN FORM ELEMENTS
+   ========================================================================== */
+
+.tryon-form-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.tryon-form-table th {
+    background: #f8f9fa;
+    padding: 20px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 1px solid #e9ecef;
+    width: 200px;
+    vertical-align: top;
+}
+
+.tryon-form-table td {
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: top;
+}
+
+.tryon-form-table tr:hover {
+    background: #f8f9fa;
+}
+
+.tryon-form-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Modern Input Fields */
+.tryon-input {
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: #fff;
+    width: 100%;
+    max-width: 400px;
+}
+
+.tryon-input:focus {
+    outline: none;
+    border-color: #FF6E0E;
+    box-shadow: 0 0 0 3px rgba(255, 110, 14, 0.1);
+}
+
+.tryon-input.regular-text {
+    max-width: 400px;
+}
+
+.tryon-input.small-text {
+    max-width: 80px;
+}
+
+.tryon-input.large-text {
+    max-width: 100%;
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Modern Select Dropdowns */
+.tryon-select {
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+}
+
+.tryon-select:focus {
+    outline: none;
+    border-color: #FF6E0E;
+    box-shadow: 0 0 0 3px rgba(255, 110, 14, 0.1);
+}
+
+.tryon-select[multiple] {
+    min-height: 120px;
+    max-width: 300px;
+}
+
+/* Modern Radio Buttons */
+.tryon-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tryon-radio-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fff;
+}
+
+.tryon-radio-item:hover {
+    border-color: #FF6E0E;
+    background: #fff5f0;
+}
+
+.tryon-radio-item input[type="radio"] {
+    margin: 0;
+    width: 18px;
+    height: 18px;
+    accent-color: #FF6E0E;
+}
+
+/* Override any ::before pseudo-elements for radio buttons */
+.tryon-radio-item input[type="radio"]::before {
+    background-color: #FF6E0E !important;
+    border-color: #FF6E0E !important;
+}
+
+.tryon-radio-item input[type="radio"]:checked::before {
+    background-color: #FF6E0E !important;
+    border-color: #FF6E0E !important;
+}
+
+/* Additional radio button styling to ensure orange color */
+.tryon-radio-item input[type="radio"]:checked {
+    background-color: #FF6E0E !important;
+    border-color: #FF6E0E !important;
+}
+
+.tryon-radio-item input[type="radio"]:checked:focus {
+    box-shadow: 0 0 0 2px rgba(255, 110, 14, 0.25) !important;
+}
+
+.tryon-radio-item input[type="radio"]:checked + label {
+    color: #FF6E0E;
+    font-weight: 600;
+}
+
+.tryon-radio-item:has(input[type="radio"]:checked) {
+    border-color: #FF6E0E;
+    background: #fff5f0;
+}
+
+/* Modern Checkboxes */
+.tryon-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fff;
+    max-width: fit-content;
+}
+
+.tryon-checkbox-item:hover {
+    border-color: #FF6E0E;
+    background: #fff5f0;
+}
+
+.tryon-checkbox-item input[type="checkbox"] {
+    margin: 0;
+    width: 18px;
+    height: 18px;
+    accent-color: #FF6E0E;
+}
+
+.tryon-checkbox-item:has(input[type="checkbox"]:checked) {
+    border-color: #FF6E0E;
+    background: #fff5f0;
+}
+
+/* ==========================================================================
+   MODERN BUTTONS
+   ========================================================================== */
+
+.tryon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+    min-height: 44px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tryon-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+.tryon-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tryon-btn-primary {
+    background: linear-gradient(135deg, #FF6E0E 0%, #E55A0C 100%);
+    color: white;
+}
+
+.tryon-btn-primary:hover {
+    background: linear-gradient(135deg, #E55A0C 0%, #CC4A0A 100%);
+    color: white;
+}
+
+.tryon-btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.tryon-btn-secondary:hover {
+    background: #5a6268;
+    color: white;
+}
+
+.tryon-btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.tryon-btn-success:hover {
+    background: #218838;
+    color: white;
+}
+
+.tryon-btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.tryon-btn-danger:hover {
+    background: #c82333;
+    color: white;
+}
+
+.tryon-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tryon-btn-lg {
+    padding: 16px 32px;
+    font-size: 16px;
+    min-height: 52px;
+}
+
+.tryon-ml-2 {
+    margin-left: 16px;
+}
+
+/* ==========================================================================
+   MODERN CREDIT PACK SELECTION
+   ========================================================================== */
+
+.tryon-credit-packs {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.tryon-credit-pack {
+    padding: 16px 24px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 16px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.tryon-credit-pack:hover {
+    border-color: #FF6E0E;
+    background: #fff5f0;
+}
+
+.tryon-credit-pack.tryon-credit-pack-selected {
+    border-color: #FF6E0E;
+    background: #FF6E0E;
+    color: white;
+}
+
+.tryon-credit-display {
+    text-align: center;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #495057;
+}
+
+/* ==========================================================================
+   MODERN COLOR PICKER
+   ========================================================================== */
+
+.tryon-color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.tryon-color-picker {
+    width: 60px;
+    height: 40px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tryon-color-picker:hover {
+    border-color: #FF6E0E;
+}
+
+.tryon-color-text {
+    width: 120px;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.tryon-color-text:focus {
+    outline: none;
+    border-color: #FF6E0E;
+    box-shadow: 0 0 0 3px rgba(255, 110, 14, 0.1);
+}
+
+.tryon-color-display {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   MODERN PADDING/SPACING CONTROLS
+   ========================================================================== */
+
+.tryon-spacing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    max-width: 500px;
+}
+
+.tryon-spacing-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tryon-spacing-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 13px;
+}
+
+.tryon-spacing-input {
+    padding: 10px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.tryon-spacing-input:focus {
+    outline: none;
+    border-color: #FF6E0E;
+    box-shadow: 0 0 0 3px rgba(255, 110, 14, 0.1);
+}
+
+/* ==========================================================================
+   MODERN STATUS INDICATORS
+   ========================================================================== */
+
+.tryon-status {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tryon-status-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.tryon-status-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.tryon-status-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.tryon-status-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* ==========================================================================
+   MODERN NOTICE BOXES
+   ========================================================================== */
+
+.tryon-notice {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 16px 0;
+    border-left: 4px solid;
+}
+
+.tryon-notice-warning {
+    background: #fff3cd;
+    border-left-color: #ffc107;
+    color: #856404;
+}
+
+.tryon-notice-info {
+    background: #d1ecf1;
+    border-left-color: #17a2b8;
+    color: #0c5460;
+}
+
+.tryon-notice-success {
+    background: #d4edda;
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+/* ==========================================================================
+   MODERN MODAL
+   ========================================================================== */
+
+.tryon-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.tryon-modal-content {
+    background: #fff;
+    border-radius: 12px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.tryon-modal-header {
+    padding: 24px 24px 0;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 20px;
+}
+
+.tryon-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.tryon-modal-close:hover {
+    color: #dc3545;
+}
+
+.tryon-modal-body {
+    padding: 0 24px 24px;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .tryon-admin-header {
+        padding: 20px;
+    }
+    
+    .tryon-admin-header h1 {
+        font-size: 24px;
+    }
+    
+    .tryon-nav-tab {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+    
+    .tryon-form-table th,
+    .tryon-form-table td {
+        padding: 16px;
+    }
+    
+    .tryon-form-table th {
+        width: auto;
+        display: block;
+        border-bottom: none;
+        padding-bottom: 8px;
+    }
+    
+    .tryon-form-table td {
+        display: block;
+        padding-top: 8px;
+    }
+    
+    .tryon-credit-packs {
+        flex-direction: column;
+    }
+    
+    .tryon-credit-pack {
+        width: 100%;
+    }
+    
+    .tryon-spacing-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .tryon-color-picker-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .tryon-spacing-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tryon-radio-group {
+        gap: 8px;
+    }
+    
+    .tryon-radio-item {
+        padding: 10px 12px;
+    }
+}
+
+/* ==========================================================================
+   UTILITY CLASSES
+   ========================================================================== */
+
+.tryon-text-center { text-align: center; }
+.tryon-text-left { text-align: left; }
+.tryon-text-right { text-align: right; }
+
+.tryon-mb-0 { margin-bottom: 0; }
+.tryon-mb-1 { margin-bottom: 8px; }
+.tryon-mb-2 { margin-bottom: 16px; }
+.tryon-mb-3 { margin-bottom: 24px; }
+.tryon-mb-4 { margin-bottom: 32px; }
+
+.tryon-mt-0 { margin-top: 0; }
+.tryon-mt-1 { margin-top: 8px; }
+.tryon-mt-2 { margin-top: 16px; }
+.tryon-mt-3 { margin-top: 24px; }
+.tryon-mt-4 { margin-top: 32px; }
+
+.tryon-d-flex { display: flex; }
+.tryon-align-items-center { align-items: center; }
+.tryon-justify-content-between { justify-content: space-between; }
+.tryon-gap-2 { gap: 16px; }
+
+.tryon-hidden { display: none; }
+.tryon-visible { display: block; }
+
+/* ==========================================================================
+   TOGGLE SWITCH STYLING
+   ========================================================================== */
+
+/* Toggle switches are the actual form inputs, no need to hide anything */
+
+/* ==========================================================================
+   RADIO BUTTON OVERRIDES
+   ========================================================================== */
+
+/* Override any default radio button styling with TryOnTool orange */
+.tryon-admin-wrap input[type="radio"] {
+    accent-color: #FF6E0E !important;
+}
+
+.tryon-admin-wrap input[type="radio"]:checked {
+    background-color: #FF6E0E !important;
+    border-color: #FF6E0E !important;
+}
+
+.tryon-admin-wrap input[type="radio"]:checked::before {
+    background-color: #FF6E0E !important;
+    border-color: #FF6E0E !important;
+}
+
+.tryon-admin-wrap input[type="radio"]:checked:focus {
+    box-shadow: 0 0 0 2px rgba(255, 110, 14, 0.25) !important;
+}
+
+/* Override WordPress admin default radio button styles */
+.tryon-admin-wrap .form-table input[type="radio"]:checked {
+    background-color: #FF6E0E !important;
+    border-color: #FF6E0E !important;
+}
+
+.tryon-admin-wrap .form-table input[type="radio"]:checked::before {
+    background-color: #FF6E0E !important;
+    border-color: #FF6E0E !important;
+}
+
+/* ==========================================================================
+   LEGACY COMPATIBILITY
+   ========================================================================== */
+
+/* Ensure existing functionality works with new styles */
+.form-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.form-table th,
+.form-table td {
+    border: none;
+}
+
+.nav-tab-wrapper {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.nav-tab {
+    background: transparent;
+    border: none;
+    color: inherit;
+    padding: inherit;
+    margin: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    cursor: inherit;
+    transition: inherit;
+    position: inherit;
+    text-decoration: inherit;
+    display: inherit;
+    align-items: inherit;
+    gap: inherit;
+}
+
+/* Override WordPress default styles for our custom elements */
+.tryon-admin-wrap .button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tryon-admin-wrap .button-primary {
+    background: linear-gradient(135deg, #FF6E0E 0%, #E55A0C 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.tryon-admin-wrap .button-primary:hover {
+    background: linear-gradient(135deg, #E55A0C 0%, #CC4A0A 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tryon-admin-wrap .button-secondary {
+    background: #6c757d;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.tryon-admin-wrap .button-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
+   TEMPORARY: HIDE BUTTON TEXT FEATURE
+   ======================================== */
+/* Hide the Button Text feature row */
+.button-text-feature-row {
+    display: none !important;
+}
