@@ -1,0 +1,130 @@
+/* Configuration Tab Styles */
+.tryon-language-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.tryon-language-selector .tryon-select {
+    min-width: 200px;
+}
+
+.tryon-translation-status {
+    margin-top: 15px;
+}
+
+.tryon-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.tryon-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+.tryon-language-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.tryon-status {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.tryon-status-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.tryon-status-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.tryon-status-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.tryon-status-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.tryon-notice {
+    padding: 15px;
+    margin: 15px 0;
+    border-left: 4px solid;
+    border-radius: 0 4px 4px 0;
+}
+
+.tryon-notice-info {
+    background: #e7f3ff;
+    border-left-color: #0073aa;
+    color: #0c5460;
+}
+
+.tryon-notice h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #0073aa;
+}
+
+.tryon-notice ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.tryon-notice li {
+    margin-bottom: 5px;
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] .tryon-language-selector {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .tryon-status-item {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .tryon-notice {
+    border-left: none;
+    border-right: 4px solid;
+    border-radius: 4px 0 0 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tryon-language-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .tryon-language-selector .tryon-select {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .tryon-status-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

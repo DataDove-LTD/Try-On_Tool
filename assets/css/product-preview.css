@@ -1,0 +1,1563 @@
+/**
+ * A WooCommerce plugin that allows users to virtually try on clothing and accessories.
+ *
+ * @package Try-On Tool
+ * @copyright 2025 DataDove LTD
+ * @license GPL-2.0-only
+ *
+ * This file is part of Try-On Tool.
+ * 
+ * Try-On Tool is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 2 only.
+ * 
+ * Try-On Tool is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+/* Modal styles */
+.woo-fitroom-preview-modal {
+  display: none;
+  position: fixed;
+  z-index: 999999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.woo-fitroom-preview-modal.is-open{ display:flex !important; align-items:center; justify-content:center; padding:20px; }
+.woo-fitroom-preview-modal.is-open .modal-content{ margin:0; max-height:90vh !important; overflow-y:auto !important; }
+
+/* Theme-aware color tokens (fallback to WP primary or a sensible blue) */
+.woo-fitroom-preview-modal{
+  --tryon-primary: var(--wp--preset--color--primary, #007cba);
+  --tryon-primary-20: color-mix(in srgb, var(--tryon-primary) 20%, transparent);
+  --tryon-primary-25: color-mix(in srgb, var(--tryon-primary) 25%, transparent);
+  --tryon-soft-bg: color-mix(in srgb, var(--tryon-primary) 6%, white);
+}
+
+/* Try-On Button Theme Integration */
+.woo-fitroom-preview-button,
+.woo-fitroom-preview-button-top-bottom,
+.woo-fitroom-preview-button-bottom {
+  /* Base button styling - will be overridden by theme detection or custom color */
+  background: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) !important;
+  color: var(--tryon-theme-text, #ffffff) !important;
+  border: var(--tryon-theme-border-width, 1px) var(--tryon-theme-border-style, solid) var(--tryon-theme-border, var(--tryon-custom-color, #007cba)) !important;
+  border-radius: var(--tryon-custom-border-radius, var(--tryon-theme-radius, 3px)) !important;
+  padding: var(--tryon-custom-padding, var(--tryon-theme-padding, 12px 20px)) !important;
+  font-size: var(--tryon-theme-font-size, 14px) !important;
+  font-weight: var(--tryon-theme-font-weight, 600) !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  margin-left: 10px !important;
+  min-height: 44px !important;
+  line-height: var(--tryon-theme-line-height, 1.4) !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important; /* Prevent text wrapping */
+  min-width: auto !important; /* Allow natural width */
+  text-transform: var(--tryon-theme-text-transform, none) !important;
+  letter-spacing: var(--tryon-theme-letter-spacing, normal) !important;
+  box-shadow: var(--tryon-theme-box-shadow, none) !important;
+}
+
+/* Ensure main product page button keeps original font size */
+.woocommerce .woo-fitroom-preview-button {
+  font-size: var(--tryon-theme-font-size, 14px) !important;
+}
+
+/* Override theme styles with higher specificity */
+.woocommerce .woo-fitroom-preview-button,
+.woocommerce div.product .woo-fitroom-preview-button,
+.woocommerce.single-product .woo-fitroom-preview-button,
+.woocommerce.single-product .woo-fitroom-preview-button-top-bottom,
+.woocommerce.single-product .woo-fitroom-preview-button-bottom,
+body .woo-fitroom-preview-button,
+body .woo-fitroom-preview-button-top-bottom,
+body .woo-fitroom-preview-button-bottom {
+  background: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) !important;
+  color: var(--tryon-theme-text, #ffffff) !important;
+  border: var(--tryon-theme-border-width, 1px) var(--tryon-theme-border-style, solid) var(--tryon-theme-border, var(--tryon-custom-color, #007cba)) !important;
+  border-radius: var(--tryon-custom-border-radius, var(--tryon-theme-radius, 3px)) !important;
+  padding: var(--tryon-custom-padding, var(--tryon-theme-padding, 12px 20px)) !important;
+  font-size: var(--tryon-theme-font-size, 14px) !important;
+  font-weight: var(--tryon-theme-font-weight, 600) !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  margin-left: 10px !important;
+  min-height: 44px !important;
+  line-height: var(--tryon-theme-line-height, 1.4) !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  min-width: auto !important;
+  text-transform: var(--tryon-theme-text-transform, none) !important;
+  letter-spacing: var(--tryon-theme-letter-spacing, normal) !important;
+  box-shadow: var(--tryon-theme-box-shadow, none) !important;
+}
+
+.woocommerce .woo-fitroom-preview-button:hover,
+.woocommerce div.product .woo-fitroom-preview-button:hover,
+.woocommerce.single-product .woo-fitroom-preview-button:hover,
+.woocommerce.single-product .woo-fitroom-preview-button-top-bottom:hover,
+.woocommerce.single-product .woo-fitroom-preview-button-bottom:hover,
+body .woo-fitroom-preview-button:hover,
+body .woo-fitroom-preview-button-top-bottom:hover,
+body .woo-fitroom-preview-button-bottom:hover {
+  background: var(--tryon-theme-bg-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  color: var(--tryon-theme-text-hover, #ffffff) !important;
+  border-color: var(--tryon-theme-border-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--tryon-theme-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15)) !important;
+}
+
+/* Fix for sticky banner buttons - ensure proper width and prevent text wrapping */
+.ast-sticky-add-to-cart .woo-fitroom-preview-button,
+.ast-sticky-add-to-cart .woo-fitroom-preview-button-top-bottom,
+.ast-sticky-add-to-cart .woo-fitroom-preview-button-bottom,
+.woocommerce-sticky-add-to-cart .woo-fitroom-preview-button,
+.woocommerce-sticky-add-to-cart .woo-fitroom-preview-button-top-bottom,
+.woocommerce-sticky-add-to-cart .woo-fitroom-preview-button-bottom,
+.sticky-add-to-cart .woo-fitroom-preview-button,
+.sticky-add-to-cart .woo-fitroom-preview-button-top-bottom,
+.sticky-add-to-cart .woo-fitroom-preview-button-bottom,
+.ast-sticky-cart .woo-fitroom-preview-button,
+.ast-sticky-cart .woo-fitroom-preview-button-top-bottom,
+.ast-sticky-cart .woo-fitroom-preview-button-bottom {
+  white-space: nowrap !important;
+  min-width: 120px !important; /* Ensure minimum width for "Try It On" text */
+  width: auto !important;
+  flex-shrink: 0 !important; /* Prevent shrinking in flex containers */
+  display: inline-block !important;
+  line-height: 1.2 !important; /* Tighter line height for sticky banner */
+  padding: 8px 16px !important; /* Slightly smaller padding for sticky banner */
+  font-size: 13px !important; /* Slightly smaller font for sticky banner */
+}
+
+/* Additional fix for Astra theme sticky elements */
+.ast-sticky-add-to-cart .woo-fitroom-preview-button,
+.ast-sticky-add-to-cart .woo-fitroom-preview-button-top-bottom,
+.ast-sticky-add-to-cart .woo-fitroom-preview-button-bottom,
+.ast-sticky-cart .woo-fitroom-preview-button,
+.ast-sticky-cart .woo-fitroom-preview-button-top-bottom,
+.ast-sticky-cart .woo-fitroom-preview-button-bottom {
+  margin-left: 8px !important; /* Reduce margin in sticky banner */
+  margin-right: 0 !important;
+}
+
+/* Style buttons in the try-on modal popups */
+.tryon-modal .button,
+.tryon-modal .button.alt,
+.tryon-modal .button.download-preview,
+.tryon-modal .button.try-full-outfit-btn {
+  background: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) !important;
+  color: var(--tryon-theme-text, #ffffff) !important;
+  border: var(--tryon-theme-border-width, 1px) var(--tryon-theme-border-style, solid) var(--tryon-theme-border, var(--tryon-custom-color, #007cba)) !important;
+  border-radius: var(--tryon-custom-border-radius, var(--tryon-theme-radius, 3px)) !important;
+  padding: var(--tryon-custom-padding, var(--tryon-theme-padding, 12px 20px)) !important;
+  font-size: var(--tryon-theme-font-size, 14px) !important;
+  font-weight: var(--tryon-theme-font-weight, 600) !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  min-height: 44px !important;
+  line-height: var(--tryon-theme-line-height, 1.4) !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  text-transform: var(--tryon-theme-text-transform, none) !important;
+  letter-spacing: var(--tryon-theme-letter-spacing, normal) !important;
+  box-shadow: var(--tryon-theme-box-shadow, none) !important;
+}
+
+.tryon-modal .button:hover,
+.tryon-modal .button.alt:hover,
+.tryon-modal .button.download-preview:hover,
+.tryon-modal .button.try-full-outfit-btn:hover {
+  background: var(--tryon-theme-bg-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  color: var(--tryon-theme-text-hover, #ffffff) !important;
+  border-color: var(--tryon-theme-border-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--tryon-theme-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15)) !important;
+}
+
+/* Custom Popup Styles */
+.tryon-custom-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tryon-popup-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.tryon-popup-content {
+  position: relative;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: tryon-popup-slide-in 0.3s ease-out;
+}
+
+@keyframes tryon-popup-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tryon-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tryon-popup-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.tryon-popup-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.tryon-popup-close:hover {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.tryon-popup-body {
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.tryon-popup-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tryon-popup-icon-info {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.tryon-popup-icon-info::before {
+  content: "ℹ";
+}
+
+.tryon-popup-icon-success {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.tryon-popup-icon-success::before {
+  content: "✓";
+}
+
+.tryon-popup-icon-error {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.tryon-popup-icon-error::before {
+  content: "✕";
+}
+
+.tryon-popup-icon-warning {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.tryon-popup-icon-warning::before {
+  content: "⚠";
+}
+
+.tryon-popup-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+  flex: 1;
+}
+
+.tryon-popup-footer {
+  padding: 0 20px 20px 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.tryon-popup-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.tryon-popup-cancel {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.tryon-popup-cancel:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.tryon-popup-confirm {
+  background: #007cba;
+  color: #ffffff;
+}
+
+.tryon-popup-btn-info {
+  background: #1976d2;
+}
+
+.tryon-popup-btn-success {
+  background: #2e7d32;
+}
+
+.tryon-popup-btn-error {
+  background: #d32f2f;
+}
+
+.tryon-popup-btn-warning {
+  background: #f57c00;
+}
+
+.tryon-popup-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .tryon-popup-content {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .tryon-popup-header,
+  .tryon-popup-body,
+  .tryon-popup-footer {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  
+  .tryon-popup-footer {
+    flex-direction: column;
+  }
+  
+  .tryon-popup-btn {
+    width: 100%;
+  }
+}
+
+.woo-fitroom-preview-button:hover,
+.woo-fitroom-preview-button-top-bottom:hover,
+.woo-fitroom-preview-button-bottom:hover {
+  background: var(--tryon-theme-bg-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  color: var(--tryon-theme-text-hover, #ffffff) !important;
+  border-color: var(--tryon-theme-border-hover, var(--tryon-custom-color-hover, #005a87)) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--tryon-theme-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15)) !important;
+}
+
+.woo-fitroom-preview-button:focus,
+.woo-fitroom-preview-button-top-bottom:focus,
+.woo-fitroom-preview-button-bottom:focus {
+  outline: 2px solid var(--tryon-theme-focus, #007cba) !important;
+  outline-offset: 2px !important;
+}
+
+.woo-fitroom-preview-button:active,
+.woo-fitroom-preview-button-top-bottom:active,
+.woo-fitroom-preview-button-bottom:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Mobile responsive button */
+@media (max-width: 768px) {
+  .woo-fitroom-preview-button,
+  .woo-fitroom-preview-button-top-bottom,
+  .woo-fitroom-preview-button-bottom {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-top: 10px !important;
+    padding: 14px 20px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* Theme-specific overrides for popular themes */
+/* Astra Theme */
+.ast-separate-container .woo-fitroom-preview-button,
+.ast-page-builder-template .woo-fitroom-preview-button {
+  background: var(--ast-global-color-0, #007cba) !important;
+  border-color: var(--ast-global-color-0, #007cba) !important;
+}
+
+/* GeneratePress Theme - Force customizer color over WooCommerce */
+.gp-theme .woo-fitroom-preview-button,
+.generatepress .woo-fitroom-preview-button,
+body.generatepress .woo-fitroom-preview-button {
+  background: var(--gp-theme-primary, #007cba) !important;
+  border-color: var(--gp-theme-primary, #007cba) !important;
+}
+
+/* OceanWP Theme */
+.oceanwp-theme .woo-fitroom-preview-button {
+  background: var(--ocean-primary, var(--ocean-primary-color, #007cba)) !important;
+  border-color: var(--ocean-primary, var(--ocean-primary-color, #007cba)) !important;
+}
+
+/* Storefront Theme */
+.storefront .woo-fitroom-preview-button {
+  background: var(--storefront-primary, #007cba) !important;
+  border-color: var(--storefront-primary, #007cba) !important;
+}
+
+/* Additional theme detection enhancements */
+.tryon-theme-detection .woo-fitroom-preview-button {
+  /* Ensure button inherits theme styles */
+  font-family: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: inherit !important;
+}
+
+/* Specific theme overrides for better integration - removed !important to allow dynamic detection */
+/* Astra Theme specific */
+.ast-separate-container .woo-fitroom-preview-button,
+.ast-page-builder-template .woo-fitroom-preview-button {
+  border-radius: var(--ast-button-border-radius, var(--tryon-custom-border-radius, 3px));
+  font-weight: var(--ast-button-font-weight, 600);
+}
+
+/* GeneratePress specific */
+.gp-theme .woo-fitroom-preview-button {
+  border-radius: var(--gp-button-border-radius, var(--tryon-custom-border-radius, 3px));
+  font-weight: var(--gp-button-font-weight, 600);
+}
+
+/* OceanWP specific */
+.oceanwp-theme .woo-fitroom-preview-button {
+  border-radius: var(--ocean-button-border-radius, var(--tryon-custom-border-radius, 3px));
+  font-weight: var(--ocean-button-font-weight, 600);
+}
+
+/* Storefront specific */
+.storefront .woo-fitroom-preview-button {
+  border-radius: var(--storefront-button-border-radius, var(--tryon-custom-border-radius, 3px));
+  font-weight: var(--storefront-button-font-weight, 600);
+}
+.woo-fitroom-preview-modal .modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 600px;
+  min-width: 400px;
+  border-radius: 5px;
+  position: relative; 
+  max-height: 80% !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Allow scrolling when content height increases - remove hidden overflow restriction */
+@media (min-width: 768px) {
+  .woo-fitroom-preview-modal.preview-mode .modal-content {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* Allow scrollbar on small screens when preview is generated */
+@media (max-width: 767px) {
+  .woo-fitroom-preview-modal.preview-mode .modal-content {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+}
+
+.woo-fitroom-preview-modal .close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.woo-fitroom-preview-modal .close:hover {
+  color: #000;
+}
+
+/* Form styles */
+.woo-fitroom-preview-modal .form-field {
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.woo-fitroom-preview-modal label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.woo-fitroom-preview-modal .upload-dropzone input[type="file"]{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:0;
+  cursor:pointer;
+  z-index:2; /* sit above decorative content to capture clicks */
+}
+
+.woo-fitroom-preview-modal .description {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 5px;
+}
+
+/* Preview result styles */
+.woo-fitroom-preview-modal .preview-result {
+  margin-top: 20px;
+}
+
+/* ------------------------------------------------------------
+ Drag & drop / Browse upload box
+ ------------------------------------------------------------ */
+.woo-fitroom-preview-modal .upload-dropzone{
+  position:relative;
+  border:2px dashed var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) !important;
+  background: color-mix(in srgb, var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) 6%, white);
+  border-radius:12px;
+  padding:22px;
+  min-height:140px;
+  cursor:pointer;
+  width:100%;
+  box-sizing:border-box;
+}
+.woo-fitroom-preview-modal .upload-dropzone .dz-inner{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  height:100%;
+  min-width:0;
+  flex:1;
+}
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon{
+  width:56px; height:56px;
+  border-radius:12px;
+  background: color-mix(in srgb, var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) 20%, transparent);
+  position:relative;
+  overflow:hidden;
+}
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon::before{
+  content:""; position:absolute; inset:0; z-index:0; /* keep below the img */
+  background: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba));
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M19 13v6H5v-6H3v8h18v-8h-2zm-6-12l-5 5h3v6h4V6h3l-5-5z"/></svg>') center/26px 26px no-repeat;
+          mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M19 13v6H5v-6H3v8h18v-8h-2zm-6-12l-5 5h3v6h4V6h3l-5-5z"/></svg>') center/26px 26px no-repeat;
+}
+/* When a thumbnail is present, hide the mask icon and show the image */
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon.has-thumb::before{ display:none !important; }
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon.has-thumb{ background:transparent !important; }
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon.has-thumb::before{ display:none !important; content:none !important; background:none !important; }
+/* Hide mask when an <img> is inside (fallback if class missing) */
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon img + *::before{display:none!important;}
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon.has-thumb img{
+  width:100%; height:100%; object-fit:cover; border-radius:12px; display:block;
+}
+/* fallback when .has-thumb not set (JS appends but may not add class) */
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;z-index:1;}
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon img~*{display:none;}
+.woo-fitroom-preview-modal .upload-dropzone .dz-title{
+  font-weight:700;
+  color:#111827;
+  font-size:16px;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.woo-fitroom-preview-modal .upload-dropzone .dz-copy{
+  flex:1;
+  min-width:0;
+}
+.woo-fitroom-preview-modal .upload-dropzone .dz-hint{
+  font-size:.88em; color:#6b7280; margin-top:4px;
+}
+.woo-fitroom-preview-modal .upload-dropzone .dz-browse{
+  color: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)); text-decoration:underline; cursor:pointer;
+}
+.woo-fitroom-preview-modal .upload-dropzone:hover{
+  background: color-mix(in srgb, var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) 6%, white); border-color:var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) !important;
+}
+.woo-fitroom-preview-modal .upload-dropzone.dragover{
+  background: color-mix(in srgb, var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) 6%, white); border-color:var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) !important; box-shadow:0 0 0 3px color-mix(in srgb, var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) 25%, transparent);
+}
+
+/* Force theme primary color inheritance for upload dropzone */
+.woo-fitroom-preview-modal .upload-dropzone,
+.woo-fitroom-preview-modal .upload-dropzone * {
+  border-color: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) !important;
+}
+
+@media (max-width: 480px){
+.woo-fitroom-preview-modal .upload-dropzone .dz-inner{ flex-direction:column; text-align:center; gap:12px; }
+.woo-fitroom-preview-modal .upload-dropzone .dz-icon{ margin-bottom:4px; }
+}
+
+.woo-fitroom-preview-modal .preview-image {
+  margin: 20px 0;
+  text-align: center;
+  max-height: 60vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.woo-fitroom-preview-modal .preview-image img {
+  max-width: 85%;
+  max-height: 60vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.woo-fitroom-preview-modal .preview-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Preview footer with left/right actions */
+.woo-fitroom-preview-modal .preview-footer{
+display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px;
+}
+
+.woo-fitroom-preview-modal .preview-footer .left-actions {
+  display: flex !important;
+  flex-direction: row !important; /* desktop: keep buttons in one row */
+  align-items: center !important;
+  column-gap: 12px !important;
+  row-gap: 8px !important;
+  text-align: left !important;
+  flex-wrap: nowrap !important;
+}
+
+.woo-fitroom-preview-modal .preview-footer .right-actions {
+  display: flex !important;
+  flex-direction: row !important; /* desktop: icons in one row */
+  align-items: center !important;
+  column-gap: 12px !important;
+  text-align: right !important;
+}
+
+.woo-fitroom-preview-modal .preview-footer .right-actions.preview-toolbar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  row-gap: 8px !important;
+  text-align: right !important;
+}
+
+.woo-fitroom-preview-modal .preview-footer .button {
+width: auto;
+max-width: 100%;
+white-space: nowrap;
+}
+
+.woo-fitroom-preview-modal .preview-footer .icon-btn{
+background:transparent; border:none; cursor:pointer; font-size:30px; line-height:1; padding:8px; border-radius:8px;
+}
+.woo-fitroom-preview-modal .preview-footer .icon-btn:hover{
+background: color-mix(in srgb, var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) 6%, white);
+}
+
+/* Hide modal title bar when preview is visible */
+.woo-fitroom-preview-modal.preview-mode h2,
+.woo-fitroom-preview-modal.preview-mode .strip-title{ display:none; }
+
+/* Regenerate icon tint */
+.woo-fitroom-preview-modal .preview-footer .regenerate-preview{ color: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)); }
+.woo-fitroom-preview-modal .preview-footer .regenerate-preview:hover{ color: var(--tryon-theme-bg-hover, var(--tryon-custom-color-hover, #005a87)); }
+.woo-fitroom-preview-modal .preview-footer .regenerate-preview .icon-svg{ width:30px; height:30px; display:inline-block; }
+/* Base icon box uses currentColor for tint */
+.woo-fitroom-preview-modal .preview-footer .icon-svg{
+width:30px; height:30px; display:inline-block;
+background-color: currentColor;
+-webkit-mask-size: contain; mask-size: contain;
+-webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+-webkit-mask-position: center; mask-position: center;
+}
+/* Regenerate (refresh) icon */
+.woo-fitroom-preview-modal .preview-footer .regenerate-icon{
+-webkit-mask-image: url('../images/repeat-2.svg');
+        mask-image: url('../images/repeat-2.svg');
+-webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+-webkit-mask-position: center;
+        mask-position: center;
+-webkit-mask-size: contain;
+        mask-size: contain;
+}
+/* Share icon */
+.woo-fitroom-preview-modal .preview-footer .share-icon{
+-webkit-mask-image: url('../images/share-2.svg');
+        mask-image: url('../images/share-2.svg');
+-webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+-webkit-mask-position: center;
+        mask-position: center;
+-webkit-mask-size: contain;
+        mask-size: contain;
+}
+/* Share button styles aligned with theme primary color */
+.woo-fitroom-preview-modal .preview-footer .share-preview{ color: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)); }
+.woo-fitroom-preview-modal .preview-footer .share-preview:hover{ color: var(--tryon-theme-bg-hover, var(--tryon-custom-color-hover, #005a87)); }
+.woo-fitroom-preview-modal .preview-footer .share-preview .icon-svg{ width:30px; height:30px; display:inline-block; }
+/* Override removed to allow repeat-2.svg definition to apply */
+
+/* Error styles */
+.woo-fitroom-preview-modal .preview-error {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  color: #721c24;
+}
+
+/* Button styles */
+.woo-fitroom-preview-button,
+.woo-fitroom-preview-button-top-bottom,
+.woo-fitroom-preview-button-bottom {
+  margin-left: 10px !important;
+}
+
+.woo-fitroom-preview-modal .product-image-preview {
+  margin-bottom: 20px;
+  text-align: center;
+  min-height: 150px;
+  position: relative;
+}
+
+.woo-fitroom-preview-modal .product-image-preview img {
+  max-width: 200px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
+  background-color: #f9f9f9;
+}
+
+/* Empty image placeholder */
+.woo-fitroom-preview-modal .product-image-preview:empty::after {
+  content: "No image available";
+  display: inline-block;
+  width: 200px;
+  height: 150px;
+  background-color: #f5f5f5;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  line-height: 150px;
+  color: #999;
+  font-style: italic;
+}
+
+.woo-fitroom-preview-modal .product-image-preview img.image-error {
+  border-color: #f5c6cb;
+  background-color: #f8d7da;
+}
+
+.woo-fitroom-preview-modal .product-image-preview .error {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  padding: 5px 10px;
+  margin-top: 10px;
+  display: inline-block;
+}
+
+.woo-fitroom-preview-modal .product-image-preview h4 {
+  margin-bottom: 10px;
+}
+
+/* Inline uploads strip */
+.woo-fitroom-preview-modal .my-uploads-strip .strip-list{
+display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; padding-bottom:4px;
+}
+.woo-fitroom-preview-modal .my-uploads-strip .thumb{
+width:100%; 
+aspect-ratio:1/1; 
+height:auto; 
+border-radius:10px; 
+overflow:hidden; 
+border:1px solid #e5e7eb; 
+background:#fff; 
+cursor:pointer; 
+position:relative;
+display:block;
+}
+.woo-fitroom-preview-modal .my-uploads-strip .thumb img{ 
+  width:100% !important; 
+  height:100%; 
+  object-fit:cover; 
+  object-position:center center;
+  image-rendering:auto; 
+  display:block; 
+  position:absolute;
+  top:0;
+  left:0;
+  min-width:100%;
+  min-height:100%;
+  max-width:none;
+  max-height:none;
+  margin-left:0 !important;
+  margin-right:0 !important;
+  /* Fallback for older browsers */
+  background-size:cover;
+  background-position:center center;
+  background-repeat:no-repeat;
+}
+.woo-fitroom-preview-modal .my-uploads-strip .thumb.selected{ outline:3px solid color-mix(in srgb, var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) 25%, transparent); border-color: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)); }
+.woo-fitroom-preview-modal .my-uploads-strip .thumb.more{
+display:flex; align-items:center; justify-content:center; color:#111; font-size:12px; background: #f3f4f6; border-style:dashed;
+}
+
+/* Delete button for uploaded images */
+.woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn,
+.uploaded-images-grid .img-item .delete-btn{
+position:absolute;
+top:6px;
+right:6px;
+width:20px;
+height:20px;
+background:rgba(239, 68, 68, 0.95);
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+z-index:9999;
+transition:all 0.2s ease;
+border:none;
+color:#fff;
+font-size:20px;
+font-weight:700;
+box-shadow:0 2px 4px rgba(0,0,0,0.3);
+/* Equal padding from all sides - 12px */
+padding: 12px !important;
+margin: 0 !important;
+/* Override theme button styles */
+min-width: auto !important;
+min-height: auto !important;
+box-sizing: border-box !important;
+}
+
+.woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn:hover,
+.uploaded-images-grid .img-item .delete-btn:hover{
+background:rgba(220, 38, 38, 1);
+transform:scale(1.1);
+}
+
+.woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn::before,
+.uploaded-images-grid .img-item .delete-btn::before{
+content:"×";
+font-size:18px;
+line-height:1;
+font-weight:700;
+}
+
+/* Ensure delete button is always on top */
+.woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn,
+.uploaded-images-grid .img-item .delete-btn{
+z-index:99999 !important;
+position:absolute !important;
+}
+
+/* Override Elementor button styling for delete buttons */
+.elementor-kit-4523 .woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn,
+.elementor-kit-4523 .uploaded-images-grid .img-item .delete-btn {
+  padding: 12px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Override theme padding inheritance for delete buttons - specific overrides */
+.woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn,
+.uploaded-images-grid .img-item .delete-btn {
+  /* Reset all inherited button styles that could cause layout issues */
+  padding: 12px !important;
+  margin: 0 !important;
+  border: none !important;
+  font-family: inherit !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+  text-indent: 0 !important;
+  text-shadow: none !important;
+  vertical-align: baseline !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+  overflow: visible !important;
+  outline: none !important;
+  resize: none !important;
+  box-sizing: border-box !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  -ms-appearance: none !important;
+  -o-appearance: none !important;
+}
+
+/* General button font weight override */
+button {
+  font-weight: 500 !important;
+}
+
+/* Mobile optimization for delete buttons */
+@media (max-width: 600px){
+  .woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn,
+  .uploaded-images-grid .img-item .delete-btn{
+    width:18px;
+    height:18px;
+    top:4px;
+    right:4px;
+    font-size:16px;
+    z-index:99999 !important;
+    /* Equal padding from all sides - 12px on mobile too */
+    padding: 12px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn::before,
+  .uploaded-images-grid .img-item .delete-btn::before{
+    font-size:16px;
+    font-weight:700;
+  }
+}
+
+/* Additional theme-specific overrides for delete buttons */
+.woo-fitroom-preview-modal .my-uploads-strip .thumb .delete-btn,
+.uploaded-images-grid .img-item .delete-btn {
+  /* Override any theme button padding that might be inherited - 12px equal padding */
+  padding: 12px !important;
+  margin: 0 !important;
+  /* Ensure the button maintains its circular shape */
+  min-width: auto !important;
+  min-height: auto !important;
+  /* Override any theme button styles */
+  background-clip: padding-box !important;
+  background-origin: padding-box !important;
+  background-size: auto !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  box-sizing: border-box !important;
+}
+
+/* Ultra-specific class for maximum theme resistance */
+.tryon-delete-btn {
+  padding: 12px !important;
+  margin: 0 !important;
+  border: none !important;
+  background: rgba(239, 68, 68, 0.95) !important;
+  color: #fff !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+  text-indent: 0 !important;
+  text-shadow: none !important;
+  vertical-align: baseline !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+  overflow: visible !important;
+  outline: none !important;
+  resize: none !important;
+  box-sizing: border-box !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  -ms-appearance: none !important;
+  -o-appearance: none !important;
+  min-width: auto !important;
+  min-height: auto !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  z-index: 99999 !important;
+  position: absolute !important;
+  top: 6px !important;
+  right: 6px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+}
+
+.tryon-delete-btn::before {
+  content: "×" !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+}
+
+.tryon-delete-btn:hover {
+  background: rgba(220, 38, 38, 1) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Mobile specific for tryon-delete-btn */
+@media (max-width: 600px) {
+  .tryon-delete-btn {
+    width: 18px !important;
+    height: 18px !important;
+    top: 4px !important;
+    right: 4px !important;
+    font-size: 16px !important;
+    padding: 12px !important;
+  }
+  
+  .tryon-delete-btn::before {
+    font-size: 16px !important;
+  }
+}
+
+/* Loading indicator */
+.loading-indicator {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.loading-indicator p {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba));
+}
+
+.spinner {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 5px solid color-mix(in srgb, var(--tryon-theme-bg, var(--tryon-custom-color, #007cba)) 20%, transparent);
+  border-radius: 50%;
+  border-top-color: var(--tryon-theme-bg, var(--tryon-custom-color, #007cba));
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+      transform: rotate(360deg);
+  }
+}
+
+/* Styles for TryOnTool Preview */
+
+/* Uploaded images grid (modal) – 3 items per row */
+.uploaded-images-grid{
+display:grid;
+grid-template-columns:repeat(3, 1fr);
+gap:10px;
+}
+.uploaded-images-grid .img-item{
+width:100%;
+aspect-ratio:1/1;
+border:1px solid #ddd;
+border-radius:6px;
+overflow:hidden;
+background:#fff;
+cursor:pointer;
+position:relative;
+}
+.uploaded-images-grid .img-item img{
+width:100% !important;
+height:100%;
+object-fit:cover;
+object-position:center center;
+display:block;
+position:absolute;
+top:0;
+left:0;
+min-width:100%;
+min-height:100%;
+max-width:none;
+max-height:none;
+margin-left:0 !important;
+margin-right:0 !important;
+/* Fallback for older browsers */
+background-size:cover;
+background-position:center center;
+background-repeat:no-repeat;
+}
+.uploaded-images-grid .img-item:hover{
+border-color: var(--tryon-primary);
+}
+
+/* ------------------------------------------------------------
+ Modern checkbox styling inside the Try-On modal
+ ------------------------------------------------------------ */
+.woo-fitroom-preview-modal input[type="checkbox"]{
+-webkit-appearance:none;
+-moz-appearance:none;
+appearance:none;
+width:18px;
+height:18px;
+border:2px solid #cbd5e1 !important; /* override inline border */
+border-radius:4px;
+background-color:#fff;
+display:inline-block;
+vertical-align:middle;
+margin-right:8px;
+cursor:pointer;
+position:relative;
+transition:background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+box-shadow:0 1px 1px rgba(0,0,0,0.04) inset;
+}
+
+.woo-fitroom-preview-modal input[type="checkbox"]:hover{
+border-color:#94a3b8 !important;
+}
+
+.woo-fitroom-preview-modal input[type="checkbox"]:focus{
+outline:none;
+box-shadow:0 0 0 3px var(--tryon-primary-25);
+border-color:var(--tryon-primary) !important;
+}
+
+.woo-fitroom-preview-modal input[type="checkbox"]:checked{
+background-color:var(--tryon-primary);
+border-color:var(--tryon-primary) !important;
+}
+
+.woo-fitroom-preview-modal input[type="checkbox"]:checked::after{
+content:"";
+position:absolute;
+top:1px;
+left:5px;
+width:5px;
+height:10px;
+border:solid #fff;
+border-width:0 2px 2px 0;
+transform:rotate(45deg);
+}
+
+.woo-fitroom-preview-modal input[type="checkbox"][disabled]{
+cursor:not-allowed;
+background-color:#f1f5f9;
+border-color:#e2e8f0 !important;
+}
+
+/* Spacing when labels wrap long consent text */
+.woo-fitroom-preview-modal .form-field label input[type="checkbox"]{
+margin-top:2px;
+}
+@media(max-width: 600px){
+  /* Mobile grid layout - keep 3 columns but make thumbnails bigger */
+  .woo-fitroom-preview-modal .my-uploads-strip .strip-list{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px; /* Slightly larger gap for mobile */
+    padding-bottom: 6px;
+  }
+  
+  .woo-fitroom-preview-modal .my-uploads-strip .thumb{
+    width: 100%;
+    aspect-ratio: 1/1;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    min-height: 80px; /* Ensure minimum size on mobile */
+  }
+  
+  /* Ensure upload dropzone is not disturbed on mobile */
+  .woo-fitroom-preview-modal .upload-dropzone{
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 15px; /* Add some spacing from thumbnails */
+  }
+  
+  .woo-fitroom-preview-modal .form-field {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .woo-fitroom-preview-modal .modal-content {
+    min-width: 320px; /* Ensure modal doesn't get too narrow on mobile */
+    max-width: 95vw; /* Prevent overflow on very small screens */
+  }
+  
+  /* Adjust preview footer layout on mobile */
+  .woo-fitroom-preview-modal .preview-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .left-actions {
+    width: 100%;
+    flex-direction: row;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .right-actions,
+  .woo-fitroom-preview-modal .preview-footer .right-actions.preview-toolbar {
+    width: 100%;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .button {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px !important;
+    padding: 10px 15px !important;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .button.download-preview,
+  .woo-fitroom-preview-modal .preview-footer .button.try-full-outfit-btn {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 120px;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .icon-btn {
+    font-size: 24px;
+    padding: 6px;
+    flex-shrink: 0;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .icon-btn .icon-svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  /* Mobile grid for modal popup - also 3 columns */
+  .uploaded-images-grid{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  
+  .uploaded-images-grid .img-item{
+    width: 100%;
+    aspect-ratio: 1/1;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    min-height: 80px; /* Ensure minimum size on mobile */
+  }
+  
+  .woo-fitroom-preview-modal .my-uploads-strip .thumb.more,
+  .woo-fitroom-preview-modal .my-uploads-strip .thumb.more span{
+    font-size: 7px !important;
+    line-height: 1.1;
+  }
+}
+
+/* Extra small mobile screens (phones in portrait) */
+@media (max-width: 480px) {
+  .woo-fitroom-preview-modal .my-uploads-strip .strip-list{
+    gap: 8px; /* Tighter gap for very small screens */
+  }
+  
+  .woo-fitroom-preview-modal .my-uploads-strip .thumb{
+    min-height: 70px; /* Slightly smaller minimum height for very small screens */
+  }
+  
+  .uploaded-images-grid .img-item{
+    min-height: 70px; /* Slightly smaller minimum height for very small screens */
+  }
+  
+  .woo-fitroom-preview-modal .modal-content {
+    min-width: 300px; /* Even smaller minimum width for very small screens */
+    padding: 15px; /* Reduce padding on small screens */
+  }
+  
+  /* Further optimize preview footer for very small screens */
+  .woo-fitroom-preview-modal .preview-footer {
+    gap: 12px;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .left-actions {
+    gap: 8px;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .right-actions,
+  .woo-fitroom-preview-modal .preview-footer .right-actions.preview-toolbar {
+    gap: 8px;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .button {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+    min-height: 40px !important;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .button.download-preview,
+  .woo-fitroom-preview-modal .preview-footer .button.try-full-outfit-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 100px;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .icon-btn {
+    font-size: 22px;
+    padding: 5px;
+  }
+  
+  .woo-fitroom-preview-modal .preview-footer .icon-btn .icon-svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+}
+.error-message{
+display: block !important;
+}
+
+/* GLOBAL fallbacks (in case markup is outside modal container) */
+.upload-dropzone .dz-icon{ position:relative; overflow:hidden; }
+.upload-dropzone .dz-icon.has-thumb{ background:transparent !important; }
+.upload-dropzone .dz-icon.has-thumb::before{ display:none !important; content:none !important; background:none !important; }
+.upload-dropzone .dz-icon img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:12px; display:block; z-index:1; }
+.upload-dropzone.show-thumb .dz-icon{ display:none !important; }
+.upload-dropzone .dz-thumb{display:none;width:56px !important;height:70px !important;border-radius:12px;object-fit:cover;margin-left: 0px !important;margin-right: 0px !important;}
+.upload-dropzone.show-thumb .dz-thumb{ display:block !important; }
+.woo-fitroom-preview-modal .upload-dropzone.show-thumb .dz-thumb{ display:block !important; }
+.woo-fitroom-preview-modal .upload-dropzone.show-thumb .dz-icon{ display:none !important; }
+
+/* Override any external CSS that might affect uploaded images */
+@media (min-width: 768px) {
+  .woo-fitroom-preview-modal .my-uploads-strip .thumb img,
+  .woo-fitroom-preview-modal .uploaded-images-grid .img-item img {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Delete All Button Styling */
+.delete-all-btn {
+  background: #dc2626 !important;
+  color: white !important;
+  border: none !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.delete-all-btn:hover {
+  background: #b91c1c !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+.delete-all-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Delete confirmation popup */
+.delete-confirmation-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000000;
+}
+
+.delete-confirmation-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+}
+
+.delete-confirmation-content h3 {
+  margin: 0 0 15px 0;
+  color: #1f2937;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.delete-confirmation-content p {
+  margin: 0 0 25px 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.delete-confirmation-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.delete-confirm-btn,
+.delete-cancel-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.delete-confirm-btn {
+  background: #dc2626;
+  color: white;
+}
+
+.delete-confirm-btn:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.delete-cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.delete-cancel-btn:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* Mobile optimization for delete popup */
+@media (max-width: 600px) {
+  .delete-confirmation-content {
+    padding: 20px;
+    margin: 20px;
+  }
+  
+  .delete-confirmation-content h3 {
+    font-size: 16px;
+  }
+  
+  .delete-confirmation-content p {
+    font-size: 13px;
+  }
+  
+  .delete-confirmation-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .delete-confirm-btn,
+  .delete-cancel-btn {
+    width: 100%;
+    padding: 12px 20px;
+  }
+}
